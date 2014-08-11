@@ -1,4 +1,12 @@
 NxtScala
 ========
 
-Scala Unitities on top of Nxt Reference Software(NRS) Java API
+Scala Utilities on top of Nxt Reference Software(NRS) Java API
+
+* Blockchain Listener
+
+* Transaction Utils
+
+* Waiting Utils
+
+
