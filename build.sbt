@@ -2,11 +2,11 @@ import com.typesafe.sbt.SbtStartScript
 
 import SbtStartScript.StartScriptKeys._
 
-organization := "nxt.org"
+organization := "nxt"
 
 name := "nxtscala"
 
-version := "0.0.2"
+version := "0.0.8"
 
 scalaVersion := "2.10.4"
 
@@ -24,3 +24,7 @@ libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "2.2.0" % "test",
     "junit" % "junit" % "4.11" % "test"
 )
+
+publishMavenStyle := true
+
+publishTo := Some(Resolver.file("nxtscala", new File( "../repo" )))

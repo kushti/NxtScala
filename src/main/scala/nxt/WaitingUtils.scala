@@ -1,4 +1,4 @@
-package utils
+package nxt.utils
 
 import nxt.{Block, BlockchainListener, Nxt}
 import scala.annotation.tailrec
