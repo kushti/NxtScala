@@ -2,7 +2,7 @@ package nxt
 
 import scala.collection.JavaConversions._
 
-case class AssetOwnersInfo(assetId:Long, issuer:Long, ownership:Map[Long,Long])
+case class AssetOwnersInfo(assetId:Long, issuer:Long, totalAssets:Long, ownership:Map[Long,Long])
 
 object AssetFunctions {
 
@@ -13,8 +13,10 @@ object AssetFunctions {
       if(balance>0) Some(acc.getId.toLong -> balance) else None
     }.toSeq.toMap
 
-    val issuer = Asset.getAsset(assetId).getAccountId
-    AssetOwnersInfo(assetId, issuer, ownership)
+    val asset = Asset.getAsset(assetId)
+    val issuer = asset.getAccountId
+    val total = asset.getQuantityQNT
+    AssetOwnersInfo(assetId, issuer, total, ownership)
   }
 
 
