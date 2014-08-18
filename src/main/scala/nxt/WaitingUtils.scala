@@ -21,6 +21,7 @@ object WaitingUtils {
     }
 
     def notify(b: Block){
+      println(s"Block ${b.getHeight} comes")
       tasks.filter(_._1==b.getHeight).foreach{case (_,p)=>
         p success Unit
       }
@@ -46,8 +47,8 @@ object WaitingUtils {
   }
 
   def afterNextBlocks[T](howMany:Int)(fn: => T):T = {
-    val currentHeight = height()
-    println(s"Current height: $currentHeight")
+    println(s"Going to wait for $howMany blocks, current height is "+height())
+
     val f = listener.submit(howMany)
     Await.result(f, howMany+ 30 seconds)
     fn
