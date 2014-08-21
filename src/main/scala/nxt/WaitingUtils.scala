@@ -21,7 +21,7 @@ object WaitingUtils {
     }
 
     def notify(b: Block){
-      println(s"Block ${b.getHeight} comes")
+      println(s"Block ${b.getHeight}, transactions inside: "+b.getTransactions.size)
       tasks.filter(_._1==b.getHeight).foreach{case (_,p)=>
         p success Unit
       }
