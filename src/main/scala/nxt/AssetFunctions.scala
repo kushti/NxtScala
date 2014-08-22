@@ -2,7 +2,8 @@ package nxt
 
 import scala.collection.JavaConversions._
 
-case class AssetOwnersInfo(assetId:Long, issuer:Long, totalAssets:Long, issuerAssets:Long, ownership:Map[Long,Long])
+case class AssetOwnersInfo(assetId:Long, issuer:Long, totalAssets:Long, height: Int,
+                           issuerAssets:Long, ownership:Map[Long,Long])
 
 object AssetFunctions {
 
@@ -18,7 +19,8 @@ object AssetFunctions {
     }.toSeq.toMap
 
     val issuerAssets = Account.getAccount(issuer).getAssetBalanceQNT(assetId)
+    val height = NxtFunctions.height
 
-    AssetOwnersInfo(assetId, issuer, total, issuerAssets, ownership)
+    AssetOwnersInfo(assetId, issuer, total, height, issuerAssets, ownership)
   }
 }

@@ -6,6 +6,8 @@ import nxt.util.Convert
 
 object NxtFunctions {
 
+  def height = Nxt.getBlockchain.getHeight
+
   def balanceNQT(id:Long):Long =
     Option(Account.getAccount(id)).map(_.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX)).getOrElse(0)
 
