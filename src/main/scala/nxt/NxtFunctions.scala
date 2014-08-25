@@ -30,4 +30,6 @@ object NxtFunctions {
   //as method Account.addOrGetAccount has package-wide visibility
   def addOrGetAccount(phrase:String):Account = addOrGetAccount(Account.getId(Crypto.getPublicKey(phrase)))
   def addOrGetAccount(accountId:Long):Account = Account.addOrGetAccount(accountId)
+
+  def transactionById(id:Long) = Option(TransactionDb.findTransaction(id))
 }
