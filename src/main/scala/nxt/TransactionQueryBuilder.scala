@@ -7,23 +7,18 @@ import nxt.db.Db
 class TransactionQueryBuilder {
   val sql = "SELECT * FROM transaction WHERE amount >= 0 "
 
-  //todo: reduce boilerplate
-
-  def heightMoreThan(height:Int) = new TransactionQueryBuilder{
-    override val sql = s"$sql AND height > $height "
+  private def withTemplate(prefix:String) = new TransactionQueryBuilder{
+    override val sql = s"$sql $prefix "
   }
 
-  def heightLessThan(height:Int) = new TransactionQueryBuilder{
-    override val sql = s"$sql AND height < $height "
-  }
+  def withHeightMoreThan(height:Int) = withTemplate(s"AND height > $height")
 
-  def havingMessage() = new TransactionQueryBuilder{
-    override val sql = s"$sql AND has_message = true "
-  }
 
-  def withType(txType:Byte) =  new TransactionQueryBuilder{
-    override val sql = s"$sql AND type = $txType"
-  }
+  def withHeightLessThan(height:Int) = withTemplate(s"AND height < $height")
+
+  def withPlainMessage() = withTemplate("AND has_message = true")
+
+  def withType(txType:Byte) = withTemplate(s"AND type = $txType")
 
   def withType(txType:Byte, subType:Byte) =  new TransactionQueryBuilder{
     override val sql = s"$sql AND type = $txType AND subtype = $subType"
