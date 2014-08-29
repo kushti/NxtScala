@@ -9,7 +9,7 @@ object NxtFunctions {
   def height = Nxt.getBlockchain.getHeight
 
   def balanceNQT(id:Long):Long =
-    Option(Account.getAccount(id)).map(_.getGuaranteedBalanceNQT(Constants.CONFIRMATIONS_RELIABLE_TX)).getOrElse(0)
+    Option(Account.getAccount(id)).map(_.getGuaranteedBalanceNQT(720)).getOrElse(0)
 
   def balanceNQT(phrase:String):Long = balanceNQT(Account.getId(Crypto.getPublicKey(phrase)))
   def balanceNQT(phrase:String*):Long = phrase.map(balanceNQT).sum
