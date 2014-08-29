@@ -32,4 +32,6 @@ object NxtFunctions {
   def addOrGetAccount(accountId:Long):Account = Account.addOrGetAccount(accountId)
 
   def transactionById(id:Long) = Option(TransactionDb.findTransaction(id))
+
+  def accountId(phrase:String) =  Account.getId(Crypto.getPublicKey(phrase)).toLong
 }
