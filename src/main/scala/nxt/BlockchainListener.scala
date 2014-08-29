@@ -1,12 +1,17 @@
 package nxt
 
 import nxt.util.Listener
+import nxt.BlockchainProcessor.Event
 
 trait BlockchainListener extends Listener[Block] {
-  def notify(b:Block)
+  def notify(b: Block)
 
-  def start(){
+  def start(eventsToListen: Seq[Event]) {
     val bi = BlockchainProcessorImpl.getInstance
-    bi.addListener(this, BlockchainProcessor.Event.AFTER_BLOCK_APPLY)
+    eventsToListen foreach (ev => bi.addListener(this, ev))
+  }
+
+  def start() {
+    start(Seq(BlockchainProcessor.Event.AFTER_BLOCK_APPLY))
   }
 }
