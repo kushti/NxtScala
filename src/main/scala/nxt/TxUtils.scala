@@ -32,7 +32,7 @@ object TxUtils {
 
     val fee = attachment match {
       case _: Attachment.ColoredCoinsAssetIssuance => Constants.ASSET_ISSUANCE_FEE_NQT
-      case _: Attachment.MessagingPollCreation => Constants.POLL_FEE_NQT
+      case _: Attachment.MessagingPollCreation => 10 * Constants.ASSET_ISSUANCE_FEE_NQT
       case _ => Fee
     }
 
