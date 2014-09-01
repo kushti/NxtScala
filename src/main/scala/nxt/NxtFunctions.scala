@@ -8,6 +8,8 @@ object NxtFunctions {
 
   def height = Nxt.getBlockchain.getHeight
 
+  def lastFeederHeight = Nxt.getBlockchainProcessor.getLastBlockchainFeederHeight
+
   def balanceNQT(id:Long):Long =
     Option(Account.getAccount(id)).map(_.getGuaranteedBalanceNQT(720)).getOrElse(0)
 
