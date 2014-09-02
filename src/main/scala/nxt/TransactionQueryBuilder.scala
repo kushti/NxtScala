@@ -10,9 +10,11 @@ class TransactionQueryBuilder {
   private def withPrefix(prefix:String) = {
     val s = this.sql
     new TransactionQueryBuilder{
-      override protected val sql = s"$s $prefix"
+      override protected val sql = s"$s $prefix "
     }
   }
+
+  def withId(id:Long) = withPrefix(s"AND id = $id")
 
   def withHeightMoreThan(height:Int) = withPrefix(s"AND height > $height")
 
