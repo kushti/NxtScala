@@ -14,6 +14,8 @@ class TransactionQueryBuilder {
     }
   }
 
+  def withSender(accountId:Long) = withPrefix(s"AND sender_id = $accountId")
+
   def withId(id:Long) = withPrefix(s"AND id = $id")
 
   def withHeightMoreThan(height:Int) = withPrefix(s"AND height > $height")
