@@ -38,7 +38,7 @@ class TransactionQueryBuilder {
         new Iterator[Transaction] {
           def hasNext = rs.next()
           def next() = TransactionDb.loadTransaction(con,rs)
-        }.toSeq
+        }.toList
       }.opt.get
     }
   }
