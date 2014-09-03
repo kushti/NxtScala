@@ -45,7 +45,6 @@ class TransactionQueryBuilder {
 }
 
 
-//todo: better name
-class BlockDbWrapper{
-  def getBlock(id:Long):Option[BlockImpl] = Option(BlockDb.findBlock(id))
+class BlockImplWrapper{
+  def getHeight(id:Long):Option[Int] = Option(BlockDb.findBlock(id)).map(_.getHeight)
 }
