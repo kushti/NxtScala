@@ -6,7 +6,7 @@ organization := "nxt"
 
 name := "nxtscala"
 
-version := "0.0.30"
+version := "0.0.31"
 
 scalaVersion := "2.10.4"
 
@@ -19,6 +19,7 @@ resolvers += "Sonatype Releases" at "http://oss.sonatype.org/content/repositorie
 resolvers += "Typesafe maven releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
 
 libraryDependencies ++= Seq(
+    "com.jsuereth" %% "scala-arm" % "1.3",
     "commons-lang" % "commons-lang" % "2.6" % "test",
     "org.scalacheck" %% "scalacheck" % "1.11.4" % "test",
     "org.scalatest" %% "scalatest" % "2.2.0" % "test",
