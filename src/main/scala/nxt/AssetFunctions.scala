@@ -1,9 +1,15 @@
 package nxt
 
 import scala.collection.JavaConversions._
+import nxt.util.Convert
 
 case class AssetOwnersInfo(assetId:Long, issuer:Long, totalAssets:Long, height: Int,
-                           issuerAssets:Long, ownership:Map[Long,Long])
+                           issuerAssets:Long, ownership:Map[Long,Long]){
+  override def toString = {
+    s"Asset: ${Convert.toUnsignedLong(assetId)}, issuer: ${Convert.rsAccount(issuer)}, total assets: $totalAssets, " +
+    s"height: $height, issuer assets: $issuerAssets, other owners:"+ownership.map{case (k,v)=> Convert.rsAccount(k)->v}
+  }
+}
 
 object AssetFunctions {
 
