@@ -4,36 +4,37 @@ import nxt.{Block, BlockchainListener, Nxt}
 import scala.annotation.tailrec
 import scala.concurrent.{Await, Promise, Future}
 import scala.concurrent.duration._
+import scala.collection.concurrent.TrieMap
 
 
 object WaitingUtils {
+  case class Task[T](promise:Promise[T], task: Function0[T]){
+    def complete = promise.success(task())
+  }
 
-  //todo: less mutable approach :)
   lazy val listener = new BlockchainListener {
     start()
 
-    var tasks = List[(Int,Promise[Unit])]()
+    val tasks = TrieMap[Int, Seq[Task[_]]]()
 
-    def submit(blocksToWait:Int):Future[Unit] = {
-      val p = Promise[Unit]()
-      tasks = height() + blocksToWait -> p :: tasks
+    def submit[T](blocksToWait: Int, task: Function0[T]): Future[T] = {
+      val p = Promise[T]()
+      val h = height() + blocksToWait
+      tasks.put(h, tasks.get(h).getOrElse(Seq()) :+ Task(p,task))
       p.future
     }
 
-    def notify(b: Block){
-      println(s"Block ${b.getHeight}, transactions inside: "+b.getTransactions.size)
-      tasks.filter(_._1==b.getHeight).foreach{case (_,p)=>
-        p success Unit
-      }
-      tasks = tasks filter(_._1>b.getHeight)
+    def notify(b: Block) {
+      println(s"Block ${b.getHeight}, transactions inside: " + b.getTransactions.size)
+      tasks.remove(b.getHeight).getOrElse(Seq()).foreach(_.complete)
     }
   }
 
   def height() = Nxt.getBlockchain.getHeight
 
-  def untilSome[T](max: Int)(fn:  => Option[T]): Option[T] = {
+  def untilSome[T](max: Int)(fn: => Option[T]): Option[T] = {
     @tailrec
-    def step(stN: Int)(fn:  => Option[T]): Option[T] = {
+    def step(stN: Int)(fn: => Option[T]): Option[T] = {
       fn match {
         case res: Some[T] => res
         case None =>
@@ -46,18 +47,26 @@ object WaitingUtils {
     step(0)(fn)
   }
 
-  def afterNextBlocks[T](howMany:Int)(fn: => T):T = {
-    println(s"Going to wait for $howMany blocks, current height is "+height())
-
-    val f = listener.submit(howMany)
-    Await.result(f, howMany+ 30 seconds)
-    fn
+  def afterNextBlocks[T](howMany: Int)(fn: () => T): Future[T] = {
+    println(s"Going to wait for $howMany blocks, current height is " + height())
+    listener.submit(howMany, fn)
   }
 
-  def afterBlock[T](fn:  => T) = afterNextBlocks(1)(fn)
+  private def emptyFn = () => Unit
 
-  def skipBlocks(n:Int) = afterNextBlocks(n)(Some())
+  def afterBlock[T](fn: () => T) = afterNextBlocks(1)(fn)
+  def skipBlocks(n: Int) = afterNextBlocks(n)(emptyFn)
   def skipBlock() = skipBlocks(1)
+  def skipUntil(targetHeight: Int) = skipBlocks(targetHeight - height())
 
-  def skipUntil(targetHeight:Int) = skipBlocks(targetHeight-height())
+  //sync
+  def afterNextBlocksSync[T](howMany: Int)(fn: () => T)(implicit atMost:Duration): T = {
+    println(s"Going to wait for $howMany blocks, current height is " + height())
+    Await.result(afterNextBlocks(howMany)(fn), atMost)
+  }
+
+  def afterBlockSync[T](fn: () => T)(implicit atMost:Duration) = afterNextBlocksSync(1)(fn)
+  def skipBlocksSync(n: Int)(implicit atMost:Duration) = afterNextBlocksSync(n)(emptyFn)
+  def skipBlockSync()(implicit atMost:Duration) = skipBlocksSync(1)
+  def skipUntilSync(targetHeight: Int)(implicit atMost:Duration) = skipBlocksSync(targetHeight - height())
 }

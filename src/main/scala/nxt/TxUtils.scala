@@ -5,6 +5,7 @@ import nxt.crypto.{EncryptedData, Crypto}
 import scala.{Option, Some}
 import scala.util.Try
 import nxt.Appendix.{EncryptedMessage, Message}
+import org.joda.time.DateTime
 
 
 case class Messages(plainMessage: Option[String], encryptedMessage: Option[String], encryptedMessageToSelf: Option[String])
@@ -89,5 +90,10 @@ object TxSeqUtils {
   def withTextMessage(txs: Seq[Transaction]): Seq[Transaction] = txs flatMap {
     tx =>
       Option(tx.getMessage).flatMap(msgAppendix => if (!msgAppendix.isText) None else Some(tx))
+  }
+
+  def betweenTimestamps(txs: Seq[Transaction], startTime:DateTime, endTime:DateTime) = txs.filter{tx =>
+    val timestamp = tx.getTimestamp*1000L + Constants.EPOCH_BEGINNING
+    timestamp <= endTime.getMillis && timestamp >= startTime.getMillis
   }
 }

@@ -1,12 +1,8 @@
-import com.typesafe.sbt.SbtStartScript
-
-import SbtStartScript.StartScriptKeys._
-
 organization := "nxt"
 
 name := "nxtscala"
 
-version := "0.0.35"
+version := "0.0.36"
 
 scalaVersion := "2.10.4"
 
@@ -19,6 +15,8 @@ resolvers += "Sonatype Releases" at "http://oss.sonatype.org/content/repositorie
 resolvers += "Typesafe maven releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
 
 libraryDependencies ++= Seq(
+    "org.scala-lang" % "scala-reflect" % "2.10.4",
+    "com.github.nscala-time" %% "nscala-time" % "0.4.2",
     "com.jsuereth" %% "scala-arm" % "1.3",
     "commons-lang" % "commons-lang" % "2.6" % "test",
     "org.scalacheck" %% "scalacheck" % "1.11.4" % "test",
