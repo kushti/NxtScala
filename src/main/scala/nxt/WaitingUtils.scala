@@ -8,8 +8,8 @@ import scala.collection.concurrent.TrieMap
 
 
 object WaitingUtils {
-  case class Task[T](promise:Promise[T], task: Function0[T]){
-    def complete = promise.success(task())
+  class Task[T](promise:Promise[T], task: => T){
+    def complete = promise.success(task)
   }
 
   lazy val listener = new BlockchainListener {
@@ -17,10 +17,10 @@ object WaitingUtils {
 
     val tasks = TrieMap[Int, Seq[Task[_]]]()
 
-    def submit[T](blocksToWait: Int, task: Function0[T]): Future[T] = {
+    def submit[T](blocksToWait: Int, task: => T): Future[T] = {
       val p = Promise[T]()
       val h = height() + blocksToWait
-      tasks.put(h, tasks.get(h).getOrElse(Seq()) :+ Task(p,task))
+      tasks.put(h, tasks.get(h).getOrElse(Seq()) :+ new Task(p,task))
       p.future
     }
 
@@ -47,7 +47,7 @@ object WaitingUtils {
     step(0)(fn)
   }
 
-  def afterNextBlocks[T](howMany: Int)(fn: () => T): Future[T] = {
+  def afterNextBlocks[T](howMany: Int)(fn:  => T): Future[T] = {
     println(s"Going to wait for $howMany blocks, current height is " + height())
     listener.submit(howMany, fn)
   }
@@ -60,7 +60,7 @@ object WaitingUtils {
   def skipUntil(targetHeight: Int) = skipBlocks(targetHeight - height())
 
   //sync
-  def afterNextBlocksSync[T](howMany: Int)(fn: () => T)(implicit atMost:Duration): T = {
+  def afterNextBlocksSync[T](howMany: Int)(fn: => T)(implicit atMost:Duration): T = {
     println(s"Going to wait for $howMany blocks, current height is " + height())
     Await.result(afterNextBlocks(howMany)(fn), atMost)
   }
