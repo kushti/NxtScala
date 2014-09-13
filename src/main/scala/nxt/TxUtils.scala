@@ -32,8 +32,8 @@ object TxUtils {
     val pubKey = Crypto.getPublicKey(phrase)
 
     val fee = attachment match {
-      case _: Attachment.ColoredCoinsAssetIssuance => Constants.ASSET_ISSUANCE_FEE_NQT
-      case _: Attachment.MessagingPollCreation => 10 * Constants.ASSET_ISSUANCE_FEE_NQT
+      case _: Attachment.ColoredCoinsAssetIssuance => NxtFunctions.toNqt(1001)
+      case _: Attachment.MessagingPollCreation => NxtFunctions.toNqt(11)
       case _ => Fee
     }
 

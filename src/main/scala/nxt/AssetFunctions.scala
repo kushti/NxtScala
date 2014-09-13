@@ -19,7 +19,7 @@ object AssetFunctions {
     val issuer = asset.getAccountId
     val total = asset.getQuantityQNT
 
-    val ownership = Account.getAllAccounts.flatMap{acc=>
+    val ownership = Account.getAllAccounts(0, Int.MaxValue).iterator().flatMap{acc=>
       val balance = acc.getAssetBalanceQNT(assetId)
       if(balance>0 && acc.getId!=issuer) Some(acc.getId.toLong -> balance) else None
     }.toSeq.toMap

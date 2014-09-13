@@ -2,7 +2,7 @@ organization := "nxt"
 
 name := "nxtscala"
 
-version := "0.0.37"
+version := "0.1.0"
 
 scalaVersion := "2.10.4"
 
@@ -18,10 +18,7 @@ libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % "2.10.4",
     "com.github.nscala-time" %% "nscala-time" % "0.4.2",
     "com.jsuereth" %% "scala-arm" % "1.3",
-    "commons-lang" % "commons-lang" % "2.6" % "test",
-    "org.scalacheck" %% "scalacheck" % "1.11.4" % "test",
-    "org.scalatest" %% "scalatest" % "2.2.0" % "test",
-    "junit" % "junit" % "4.11" % "test"
+    "org.scalatest" %% "scalatest" % "2.2.0" % "test"
 )
 
 publishMavenStyle := true

@@ -3,8 +3,16 @@ package nxt
 import nxt.crypto.Crypto
 import nxt.Appendix.PublicKeyAnnouncement
 import nxt.util.Convert
+import nxt.db.Db
 
 object NxtFunctions {
+
+  def withinDbTransaction[T](fn: => T):T={
+    Db.beginTransaction()
+    val t = fn
+    Db.endTransaction()
+    t
+  }
 
   def height = Nxt.getBlockchain.getHeight
 
@@ -13,7 +21,7 @@ object NxtFunctions {
   def balanceNQT(id:Long):Long =
     Option(Account.getAccount(id)).map(_.getGuaranteedBalanceNQT(720)).getOrElse(0)
 
-  def balanceNQT(phrase:String):Long = balanceNQT(Account.getId(Crypto.getPublicKey(phrase)))
+  def balanceNQT(phrase:String):Long = balanceNQT(accountId(phrase))
   def balanceNQT(phrase:String*):Long = phrase.map(balanceNQT).sum
 
   def toNqt(nxt:Long) = nxt * Constants.ONE_NXT
@@ -31,7 +39,7 @@ object NxtFunctions {
 
   //as method Account.addOrGetAccount has package-wide visibility
   def addOrGetAccount(phrase:String):Account = addOrGetAccount(Account.getId(Crypto.getPublicKey(phrase)))
-  def addOrGetAccount(accountId:Long):Account = Account.addOrGetAccount(accountId)
+  def addOrGetAccount(accountId:Long):Account = withinDbTransaction(Account.addOrGetAccount(accountId))
 
   def transactionById(id:Long) = Option(TransactionDb.findTransaction(id))
 
