@@ -15,7 +15,7 @@ class NxtScalaSpecification extends FunSuite with BeforeAndAfter{
   }
 
   test("balance - non-negative"){
-    assert(NxtFunctions.balanceNQT(Random.nextString(50)) >=0)
+    assert(NxtFunctions.balanceNqt(Random.nextString(50)) >=0)
   }
 
   test("account - add or get"){
@@ -30,9 +30,5 @@ class NxtScalaSpecification extends FunSuite with BeforeAndAfter{
     assert(NxtFunctions.getAssetBalance(Random.nextLong(), Random.nextLong()) >=0)
   }
 
-
-
-
   after{}
-
 }
