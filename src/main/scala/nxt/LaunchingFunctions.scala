@@ -30,7 +30,7 @@ object LaunchingFunctions {
 
   //todo: better place  ??
   //todo: desc
-  def ficPubkeysAndBalances(masterAccPhrase:String, targetBalances:Map[String, Long])(implicit perBlock:Duration) = {
+  def fixPubkeysAndBalances(masterAccPhrase:String, targetBalances:Map[String, Long])(implicit perBlock:Duration) = {
     targetBalances.map{case (phrase, _) =>
       checkThenFixPubKey(phrase, masterAccPhrase)
     }
