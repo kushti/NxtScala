@@ -18,18 +18,17 @@ object NxtFunctions {
 
   def lastFeederHeight = Nxt.getBlockchainProcessor.getLastBlockchainFeederHeight
 
-  def balanceNQT(id:Long):Long =
-    Option(Account.getAccount(id)).map(_.getGuaranteedBalanceNQT(720)).getOrElse(0)
+  def balanceNqt(id:Long):Long = Option(Account.getAccount(id)).map(_.getBalanceNQT).getOrElse(0)
 
-  def balanceNQT(phrase:String):Long = balanceNQT(accountId(phrase))
-  def balanceNQT(phrase:String*):Long = phrase.map(balanceNQT).sum
+  def balanceNqt(phrase:String):Long = balanceNqt(accountId(phrase))
+  def balanceNqt(phrase:String*):Long = phrase.map(balanceNqt).sum
 
   def toNqt(nxt:Long) = nxt * Constants.ONE_NXT
   def toNxt(nqt:Long) = nqt / Constants.ONE_NXT
 
-  def balanceNXT(id:Long):Long = toNxt(balanceNQT(id))
-  def balanceNXT(phrase:String):Long = toNxt(balanceNQT(phrase))
-  def balanceNXT(phrase:String*):Long = toNxt(balanceNQT(phrase:_*))
+  def balanceNxt(id:Long):Long = toNxt(balanceNqt(id))
+  def balanceNxt(phrase:String):Long = toNxt(balanceNqt(phrase))
+  def balanceNxt(phrase:String*):Long = toNxt(balanceNqt(phrase:_*))
 
   def getAssetBalance(accountId:Long, assetId:Long):Long =
     Option(Account.getAccount(accountId)).map(_.getAssetBalanceQNT(assetId)).getOrElse(0L)
@@ -43,5 +42,6 @@ object NxtFunctions {
 
   def transactionById(id:Long) = Option(TransactionDb.findTransaction(id))
 
-  def accountId(phrase:String) =  Account.getId(Crypto.getPublicKey(phrase)).toLong
+  def accountId(phrase:String) = Account.getId(Crypto.getPublicKey(phrase)).toLong
+  def accountIds(phrases:Seq[String]):Seq[Long] = phrases map accountId
 }

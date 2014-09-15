@@ -60,10 +60,8 @@ object WaitingUtils {
   def skipUntil(targetHeight: Int) = skipBlocks(targetHeight - height())
 
   //sync
-  def afterNextBlocksSync[T](howMany: Int)(fn: => T)(implicit atMost:Duration): T = {
-    println(s"Going to wait for $howMany blocks, current height is " + height())
+  def afterNextBlocksSync[T](howMany: Int)(fn: => T)(implicit atMost:Duration): T =
     Await.result(afterNextBlocks(howMany)(fn), atMost)
-  }
 
   def afterBlockSync[T](fn: () => T)(implicit atMost:Duration) = afterNextBlocksSync(1)(fn)
   def skipBlocksSync(n: Int)(implicit atMost:Duration) = afterNextBlocksSync(n)(emptyFn)

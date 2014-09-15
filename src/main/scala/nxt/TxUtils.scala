@@ -71,16 +71,15 @@ object TxUtils {
   def sendMessage(phrase: String, text: String) =
     issueTx(phrase, Attachment.ARBITRARY_MESSAGE, 0, None, None, Messages.plainOnly(text))
 
-  //todo: is it right?
-  def publicKeyAnnouncement(phrase: String) = {
+  def publicKeyAnnouncement(phrase: String, senderPhrase:String) = {
     val pk = Crypto.getPublicKey(phrase)
     val accId = Account.getId(pk)
-    issueTx(phrase, Attachment.ORDINARY_PAYMENT, 1, Some(accId), Some(pk), Messages.noMessages)
+    issueTx(senderPhrase, Attachment.ORDINARY_PAYMENT, 1, Some(accId), Some(pk), Messages.noMessages)
   }
 
-  def checkThenFixPubKey(phrase: String) = {
+  def checkThenFixPubKey(phrase: String, senderPhrase:String) = {
     if (Option(NxtFunctions.addOrGetAccount(phrase).getPublicKey).isEmpty) {
-      publicKeyAnnouncement(phrase)
+      publicKeyAnnouncement(phrase, senderPhrase)
     }
   }
 }
