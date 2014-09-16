@@ -31,6 +31,7 @@ object TxUtils {
 
     val pubKey = Crypto.getPublicKey(phrase)
 
+
     val fee = attachment match {
       case _: Attachment.ColoredCoinsAssetIssuance => NxtFunctions.toNqt(1001)
       case _: Attachment.MessagingPollCreation => NxtFunctions.toNqt(11)
@@ -43,8 +44,19 @@ object TxUtils {
     recipientOpt.map(rcp => tb.recipientId(rcp))
     rcpPubKeyOpt.map(pubKey => tb.publicKeyAnnouncement(NxtFunctions.announcement(pubKey)))
     messages.plainMessage.map(message => tb.message(new Message(message)))
-    //    messages.encryptedMessage.map(message=> tb.encryptedMessage(new EncryptedMessage(EncryptedData)))
-    //    messages.encryptedMessageToSelf.map(message=> tb.encryptToSelfMessage(new Message(message)))
+    messages.encryptedMessage.flatMap{message =>
+      val bytes = message.getBytes
+      val privKey = Crypto.getPrivateKey(phrase)
+      val theirPubOpt = rcpPubKeyOpt.orElse(recipientOpt.map(id=> Account.getAccount(id).getPublicKey))
+
+      theirPubOpt map { theirPub =>
+        val ed = EncryptedData.encrypt(message.getBytes, privKey, theirPub)
+        tb.encryptedMessage(new EncryptedMessage(ed, true)) //todo: only text messages for now
+      }
+    }
+
+    //todo: fix
+    //messages.encryptedMessageToSelf.map(message=> tb.encryptToSelfMessage(new Message(message)))
 
     val tx = tb.build()
 
