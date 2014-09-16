@@ -4,7 +4,7 @@ import nxt._
 import nxt.crypto.{EncryptedData, Crypto}
 import scala.{Option, Some}
 import scala.util.Try
-import nxt.Appendix.{EncryptedMessage, Message}
+import nxt.Appendix.{EncryptToSelfMessage, EncryptedMessage, Message}
 import org.joda.time.DateTime
 
 
@@ -55,8 +55,12 @@ object TxUtils {
       }
     }
 
-    //todo: fix
-    //messages.encryptedMessageToSelf.map(message=> tb.encryptToSelfMessage(new Message(message)))
+    messages.encryptedMessageToSelf.map{message =>
+      recipientOpt.map {rcpId =>
+        val ed = Account.getAccount(rcpId).encryptTo(message.getBytes, phrase)
+        tb.encryptToSelfMessage(new EncryptToSelfMessage(ed, true)) //todo: only text messages for now
+      }
+    }
 
     val tx = tb.build()
 
