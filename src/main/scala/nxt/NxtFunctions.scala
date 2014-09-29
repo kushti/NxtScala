@@ -46,4 +46,5 @@ object NxtFunctions {
   def accountIds(phrases:Seq[String]):Seq[Long] = phrases map accountId
 
   def generateBlock(phrase:String) = BlockchainProcessorImpl.getInstance().generateBlock(phrase, Convert.getEpochTime)
+  def popOff(howMany:Int) = BlockchainProcessorImpl.getInstance().popOffTo(NxtFunctions.height-howMany)
 }
