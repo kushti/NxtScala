@@ -1,17 +1,17 @@
 package nxt.nxtscala.test
 
 import org.scalatest.{BeforeAndAfter, FunSuite}
-import java.util.Properties
 import nxt.{NxtFunctions, Nxt}
-import scala.util.Random
+import scala.util.{Try, Random}
+import nxt.utils.WaitingUtils
+import scala.concurrent.duration._
+import scala.concurrent.Await
 
 class NxtScalaSpecification extends FunSuite with BeforeAndAfter{
   before{
     val propsRes = getClass.getClassLoader.getResource("nxt-default.properties")
     System.setProperty("nxt-default.properties", propsRes.getFile)
-    val props = new Properties()
-    props.load(getClass.getClassLoader.getResourceAsStream("nxt.properties"))
-    Nxt.init(props)
+    Nxt.init()
   }
 
   test("balance - non-negative"){
@@ -28,6 +28,13 @@ class NxtScalaSpecification extends FunSuite with BeforeAndAfter{
 
   test("asset balance - non-negative"){
     assert(NxtFunctions.getAssetBalance(Random.nextLong(), Random.nextLong()) >=0)
+  }
+
+
+  test("generate block"){
+    val f = WaitingUtils.skipBlock()
+    assert(Try(NxtFunctions.generateBlock("please note")).isSuccess)
+    Await.result(f, 2 minutes)
   }
 
   after{}
