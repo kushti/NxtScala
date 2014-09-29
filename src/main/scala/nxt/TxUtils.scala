@@ -45,7 +45,6 @@ object TxUtils {
     rcpPubKeyOpt.map(pubKey => tb.publicKeyAnnouncement(NxtFunctions.announcement(pubKey)))
     messages.plainMessage.map(message => tb.message(new Message(message)))
     messages.encryptedMessage.flatMap{message =>
-      val bytes = message.getBytes
       val privKey = Crypto.getPrivateKey(phrase)
       val theirPubOpt = rcpPubKeyOpt.orElse(recipientOpt.map(id=> Account.getAccount(id).getPublicKey))
 
@@ -77,6 +76,9 @@ object TxUtils {
 
   def sendMoney(phrase: String, amount: Long, recipient: Long) =
     issueTx(phrase, Attachment.ORDINARY_PAYMENT, amount, Some(recipient))
+
+  def sendMoney(phrase: String, amount: Long, recipient: Long, recipientPubKey:Array[Byte]) =
+    issueTx(phrase, Attachment.ORDINARY_PAYMENT, amount, Some(recipient), Some(recipientPubKey), Messages.noMessages)
 
   def sendMessage(phrase: String, text: String, recipient: Option[Long]) =
     issueTx(phrase, Attachment.ARBITRARY_MESSAGE, 0, recipient, None, Messages.plainOnly(text))

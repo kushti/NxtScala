@@ -44,4 +44,6 @@ object NxtFunctions {
 
   def accountId(phrase:String) = Account.getId(Crypto.getPublicKey(phrase)).toLong
   def accountIds(phrases:Seq[String]):Seq[Long] = phrases map accountId
+
+  def generateBlock(phrase:String) = BlockchainProcessorImpl.getInstance().generateBlock(phrase, Convert.getEpochTime)
 }

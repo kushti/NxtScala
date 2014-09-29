@@ -8,7 +8,7 @@ case class Share(accountId: Long, shares:Long, percentage:Double){
   override def toString = s"Share(id: ${Convert.rsAccount(accountId)}, shares: $shares, %%: $percentage)"
 }
 
-case class AssetOwnersInfo(assetId:Long, height: Int, totalAssets:Long, issuerShare:Share, otherShares:Seq[Share]){
+case class AssetOwners(assetId:Long, height: Int, totalAssets:Long, issuerShare:Share, otherShares:Seq[Share]){
 
   override def toString = {
     s"Asset: ${Convert.toUnsignedLong(assetId)}, total assets: $totalAssets, " +
@@ -19,7 +19,7 @@ case class AssetOwnersInfo(assetId:Long, height: Int, totalAssets:Long, issuerSh
 object AssetFunctions {
 
   //todo: totally ineffective method, should be fixed after 1.3.0
-  def assetOwners(assetId:Long):AssetOwnersInfo = {
+  def assetOwners(assetId:Long):AssetOwners = {
     val height = NxtFunctions.height
     val asset = Asset.getAsset(assetId)
     val issuer = asset.getAccountId
@@ -37,6 +37,6 @@ object AssetFunctions {
       } else None
     }.toSeq
 
-    AssetOwnersInfo(assetId, height, total, issuerShare, otherShares)
+    AssetOwners(assetId, height, total, issuerShare, otherShares)
   }
 }
