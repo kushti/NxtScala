@@ -18,7 +18,7 @@ object FastBlocksGenerator{
   }).start()
 
   private def simple(generatorPhrase:String) : Unit = {
-    Thread.sleep(1000)
+    Thread.sleep(1250)
     NxtFunctions.generateBlock(generatorPhrase)
   }
 
@@ -45,7 +45,7 @@ object WaitingUtils {
     def submit[T](blocksToWait: Int, task: => T): Future[T] = {
       val p = Promise[T]()
       val h = height() + blocksToWait
-      tasks.put(h, tasks.get(h).getOrElse(Seq()) :+ new Task(p,task))
+      tasks.put(h, tasks.getOrElse(h, Seq()) :+ new Task(p,task))
       p.future
     }
 

@@ -19,16 +19,17 @@ object NxtFunctions {
   def lastFeederHeight = Nxt.getBlockchainProcessor.getLastBlockchainFeederHeight
 
   def balanceNqt(id:Long):Long = Option(Account.getAccount(id)).map(_.getBalanceNQT).getOrElse(0)
-
   def balanceNqt(phrase:String):Long = balanceNqt(accountId(phrase))
-  def balanceNqt(phrase:String*):Long = phrase.map(balanceNqt).sum
+  def balancesNqt(phrases:String*):Seq[Long] = phrases.map(balanceNqt)
+  def totalNqt(phrases:String*):Long = phrases.map(balanceNqt).sum
 
   def toNqt(nxt:Long) = nxt * Constants.ONE_NXT
   def toNxt(nqt:Long) = nqt / Constants.ONE_NXT
 
   def balanceNxt(id:Long):Long = toNxt(balanceNqt(id))
   def balanceNxt(phrase:String):Long = toNxt(balanceNqt(phrase))
-  def balanceNxt(phrase:String*):Long = toNxt(balanceNqt(phrase:_*))
+  def totalNxt(phrases:String*):Long = toNxt(totalNqt(phrases:_*))
+  def balancesNxt(phrases:String*):Seq[Long] = phrases.map(balanceNqt).map(toNxt)
 
   def getAssetBalance(accountId:Long, assetId:Long):Long =
     Option(Account.getAccount(accountId)).map(_.getAssetBalanceQNT(assetId)).getOrElse(0L)
@@ -45,11 +46,9 @@ object NxtFunctions {
   def accountId(phrase:String) = Account.getId(Crypto.getPublicKey(phrase)).toLong
   def accountIds(phrases:Seq[String]):Seq[Long] = phrases map accountId
 
-  def generateBlock(phrase:String) = {
+  def generateBlock(phrase:String) =
     Nxt.getBlockchainProcessor.asInstanceOf[BlockchainProcessorImpl].generateBlock(phrase, Convert.getEpochTime)
-  }
 
-  def popOff(howMany:Int) = {
+  def popOff(howMany:Int) =
     BlockchainProcessorImpl.getInstance().popOffTo(NxtFunctions.height-howMany)
-  }
 }
