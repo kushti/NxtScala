@@ -18,6 +18,13 @@ object LaunchingFunctions {
     field.set(null, newValue)
   }
 
+  def launch(): Unit = {
+      val propsRes = getClass.getClassLoader.getResource("nxt-default.properties")
+      System.setProperty("nxt-default.properties", propsRes.getFile)
+      val props = new Properties()
+      Nxt.init(props)
+  }
+
   def launchAndForge(forgingPhrase:String){
     val propsRes = getClass.getClassLoader.getResource("nxt-default.properties")
     System.setProperty("nxt-default.properties", propsRes.getFile)

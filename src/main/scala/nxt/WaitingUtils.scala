@@ -24,10 +24,10 @@ object FastBlocksGenerator{
 
   def runSimple(generatorPhrase:String) = runInAnotherThread(simple(generatorPhrase))
 
-  def runWithPopOffs(generatorPhrase:String) = {
+  def runWithForks(generatorPhrase:String) = {
     runSimple(generatorPhrase)
     if(Random.nextInt(10)==7){
-      NxtFunctions.popOff(Random.nextInt(2)+1)
+      NxtFunctions.forgetLastBlocks(Random.nextInt(2)+1)
     }
   }
 }

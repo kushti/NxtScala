@@ -49,6 +49,13 @@ object NxtFunctions {
   def generateBlock(phrase:String) =
     Nxt.getBlockchainProcessor.asInstanceOf[BlockchainProcessorImpl].generateBlock(phrase, Convert.getEpochTime)
 
-  def popOff(howMany:Int) =
-    BlockchainProcessorImpl.getInstance().popOffTo(NxtFunctions.height-howMany)
+  /**
+    * Pop off blocks and then remove unconfirmed transactions
+    * @param howMany
+    */
+  def forgetLastBlocks(howMany:Int):Unit = {
+    BlockchainProcessorImpl.getInstance().popOffTo(NxtFunctions.height - howMany)
+    val tpi = TransactionProcessorImpl.getInstance()
+    tpi.removeUnconfirmedTransactions(tpi.getAllUnconfirmedTransactions, false)
+  }
 }
