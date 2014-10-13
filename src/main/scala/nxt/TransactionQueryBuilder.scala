@@ -32,6 +32,8 @@ class TransactionQueryBuilder {
 
   def withType(txType:Byte, subType:Byte) = withPrefix(s"AND type = $txType AND subtype = $subType")
 
+  def withReferenceToTransaction(tx:Transaction) = withPrefix(s"AND referencedTransactionFullHash = ${tx.getFullHash}")
+
   def query():Try[Seq[Transaction]] = {
     println(s"Going to execute query: $sql")
     Try{
