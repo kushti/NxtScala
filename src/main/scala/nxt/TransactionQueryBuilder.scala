@@ -34,7 +34,7 @@ class TransactionQueryBuilder {
 
   def withReferenceToTransaction(tx:Transaction) = withPrefix(s"AND referencedTransactionFullHash = ${tx.getFullHash}")
 
-  def query():Try[Seq[Transaction]] = {
+  def query():Try[Iterator[Transaction]] = {
     println(s"Going to execute query: $sql")
     Try{
       managed(Db.getConnection).map {con=>
@@ -43,7 +43,7 @@ class TransactionQueryBuilder {
         new Iterator[Transaction] {
           def hasNext = rs.next()
           def next() = TransactionDb.loadTransaction(con,rs)
-        }.toList
+        }
       }.opt.get
     }
   }
