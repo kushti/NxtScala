@@ -2,7 +2,7 @@ package nxt.utils
 
 import nxt._
 import nxt.crypto.{EncryptedData, Crypto}
-import scala.util.{Failure, Try}
+import scala.util.{Success, Failure, Try}
 import nxt.Appendix.{EncryptToSelfMessage, EncryptedMessage, Message}
 import org.joda.time.DateTime
 
@@ -111,134 +111,136 @@ abstract class AbstractTransactionBuilder(attachment: Attachment, amount: Long) 
   }
 
   def buildSigned(): Try[Transaction]
+
   def buildSignedAndBroadcast(): Try[Transaction]
 }
 
-  class PhraseTransactionBuilder(phrase: String, attachment: Attachment, amount: Long)
-    extends AbstractTransactionBuilder(attachment, amount) {
+class PhraseTransactionBuilder(phrase: String, attachment: Attachment, amount: Long)
+  extends AbstractTransactionBuilder(attachment, amount) {
 
-    override val publicKey = Crypto.getPublicKey(phrase)
-    override val privateKey = Some(Crypto.getPrivateKey(phrase))
+  override val publicKey = Crypto.getPublicKey(phrase)
+  override val privateKey = Some(Crypto.getPrivateKey(phrase))
 
-    def withEncryptedMessage(msg: String) = {
-      this.encryptedMessage = Some(Left(Left(msg)))
-      this
-    }
-
-    def withEncryptedMessage(msg: Array[Byte]) = {
-      this.encryptedMessage = Some(Left(Right(msg)))
-      this
-    }
-
-    def withEncryptedMessageToSelf(msg: String) = {
-      this.encryptedMessageToSelf = Some(Left(Left(msg)))
-      this
-    }
-
-    def withEncryptedMessageToSelf(msg: Array[Byte]) = {
-      this.encryptedMessageToSelf = Some(Left(Right(msg)))
-      this
-    }
-
-    override def buildSigned(): Try[Transaction] = buildUnsigned().map { tx => tx.sign(phrase); tx}
-
-    override def buildSignedAndBroadcast() = buildSigned().map { tx => Nxt.getTransactionProcessor.broadcast(tx); tx}
+  def withEncryptedMessage(msg: String) = {
+    this.encryptedMessage = Some(Left(Left(msg)))
+    this
   }
 
-  class PubKeyTransacionBuilder(pubKey: Array[Byte], attachment: Attachment, amount: Long)
-    extends AbstractTransactionBuilder(attachment, amount) {
-
-    override val publicKey = pubKey
-    override val privateKey = None
-
-    def withEncryptedMessage(msg: EncryptedMessage) = {
-      this.encryptedMessage = Some(Right(msg))
-      this
-    }
-
-    def withEncryptedMessageToSelf(msg: EncryptToSelfMessage) = {
-      this.encryptedMessageToSelf = Some(Right(msg))
-      this
-    }
-
-    override def buildSigned(): Try[Transaction] = throw new IllegalStateException("Can't sign transaction with just public key")
-    override def buildSignedAndBroadcast(): Try[Transaction] = buildSigned()
+  def withEncryptedMessage(msg: Array[Byte]) = {
+    this.encryptedMessage = Some(Left(Right(msg)))
+    this
   }
 
-  //todo: use Cake Pattern for just tx bytes generation
-  object TransactionTemplates {
+  def withEncryptedMessageToSelf(msg: String) = {
+    this.encryptedMessageToSelf = Some(Left(Left(msg)))
+    this
+  }
 
-    def issueTx(phrase: String, attachment: Attachment, amount: Long): Try[Transaction] =
-      new PhraseTransactionBuilder(phrase, attachment, amount).buildSignedAndBroadcast()
+  def withEncryptedMessageToSelf(msg: Array[Byte]) = {
+    this.encryptedMessageToSelf = Some(Left(Right(msg)))
+    this
+  }
 
-    def issueTx(phrase: String, attachment: Attachment): Try[Transaction] = issueTx(phrase, attachment, 0)
+  override def buildSigned(): Try[Transaction] = buildUnsigned().map { tx => tx.sign(phrase); tx}
 
-    def sendMoney(phrase: String, amount: Long, recipient: Long) =
-      new PhraseTransactionBuilder(phrase, Attachment.ORDINARY_PAYMENT, amount)
-        .withRecipient(recipient)
-        .buildSignedAndBroadcast()
+  override def buildSignedAndBroadcast() = buildSigned().map { tx => Nxt.getTransactionProcessor.broadcast(tx); tx}
+}
 
-    def sendMoney(phrase: String, amount: Long, recipient: Long, recipientPubKey: Array[Byte]) =
-      new PhraseTransactionBuilder(phrase, Attachment.ORDINARY_PAYMENT, amount)
-        .withPublicKeyAnnouncement(recipient, recipientPubKey)
-        .buildSignedAndBroadcast()
+class PubKeyTransacionBuilder(pubKey: Array[Byte], attachment: Attachment, amount: Long)
+  extends AbstractTransactionBuilder(attachment, amount) {
+
+  override val publicKey = pubKey
+  override val privateKey = None
+
+  def withEncryptedMessage(msg: EncryptedMessage) = {
+    this.encryptedMessage = Some(Right(msg))
+    this
+  }
+
+  def withEncryptedMessageToSelf(msg: EncryptToSelfMessage) = {
+    this.encryptedMessageToSelf = Some(Right(msg))
+    this
+  }
+
+  override def buildSigned(): Try[Transaction] = throw new IllegalStateException("Can't sign transaction with just public key")
+
+  override def buildSignedAndBroadcast(): Try[Transaction] = buildSigned()
+}
+
+//todo: use Cake Pattern for just tx bytes generation?
+object TransactionTemplates {
+
+  def issueTx(phrase: String, attachment: Attachment, amount: Long): Try[Transaction] =
+    new PhraseTransactionBuilder(phrase, attachment, amount).buildSignedAndBroadcast()
+
+  def issueTx(phrase: String, attachment: Attachment): Try[Transaction] = issueTx(phrase, attachment, 0)
+
+  def sendMoney(phrase: String, amount: Long, recipient: Long) =
+    new PhraseTransactionBuilder(phrase, Attachment.ORDINARY_PAYMENT, amount)
+      .withRecipient(recipient)
+      .buildSignedAndBroadcast()
+
+  def sendMoney(phrase: String, amount: Long, recipient: Long, recipientPubKey: Array[Byte]) =
+    new PhraseTransactionBuilder(phrase, Attachment.ORDINARY_PAYMENT, amount)
+      .withPublicKeyAnnouncement(recipient, recipientPubKey)
+      .buildSignedAndBroadcast()
 
 
+  def sendPublicMessage(phrase: String, text: String, recipient: Long) =
+    new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
+      .withRecipient(recipient)
+      .withPublicMessage(text)
+      .buildSignedAndBroadcast()
 
-    def sendPublicMessage(phrase: String, text: String, recipient: Long) =
-      new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
-        .withRecipient(recipient)
-        .withPublicMessage(text)
-        .buildSignedAndBroadcast()
-
-    def sendPublicMessage(phrase: String, text: String) =
-      new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
-        .withPublicMessage(text)
-        .buildSignedAndBroadcast()
+  def sendPublicMessage(phrase: String, text: String) =
+    new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
+      .withPublicMessage(text)
+      .buildSignedAndBroadcast()
 
 
-    def sendPublicMultipartMessage(phrase: String, text:String):Try[Transaction] = {
-      val partSize = Constants.MAX_ARBITRARY_MESSAGE_LENGTH
-      if(text.size>partSize*10) Failure(new IllegalArgumentException("Too long text"))
-      val parts = text.grouped(1000).toList
-      val headTxTry = sendPublicMessage(phrase, parts.head)
+  def sendPublicMultipartMessage(phrase: String, text: String): Try[Transaction] = {
+    val partSize = Constants.MAX_ARBITRARY_MESSAGE_LENGTH
+    if (text.size > partSize * 10) Failure(new IllegalArgumentException("Too long text"))
+    val parts = text.grouped(1000).toList
+    val headTxTry = sendPublicMessage(phrase, parts.head)
 
-      parts.tail.foldLeft[Try[Transaction]](headTxTry){case (tr, part) =>
-        tr.map{prevTx=>
-          val fh = prevTx.getFullHash
-          new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
-            .withPublicMessage(part)
-            .withReferencedTransaction(fh)
-            .buildSignedAndBroadcast()
-        }.flatten
-      }
-    }
-
-    def publicKeyAnnouncement(phrase: String, senderPhrase: String) = {
-      val pk = Crypto.getPublicKey(phrase)
-      val rcpId = Account.getId(pk)
-
-      new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
-        .withPublicKeyAnnouncement(rcpId, pk)
-        .buildSignedAndBroadcast()
-    }
-
-    def checkThenFixPubKey(phrase: String, senderPhrase: String) = {
-      if (Option(NxtFunctions.addOrGetAccount(phrase).getPublicKey).isEmpty) {
-        publicKeyAnnouncement(phrase, senderPhrase)
-      }
+    headTxTry.flatMap{headTx =>
+        parts.tail.foldLeft[Try[Transaction]](headTxTry) { case (tr, part) =>
+          tr.map { prevTx =>
+            val fh = prevTx.getFullHash
+            new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
+              .withPublicMessage(part)
+              .withReferencedTransaction(fh)
+              .buildSignedAndBroadcast()
+          }.flatten
+        }.map{_ => headTx}
     }
   }
 
+  def publicKeyAnnouncement(phrase: String, senderPhrase: String) = {
+    val pk = Crypto.getPublicKey(phrase)
+    val rcpId = Account.getId(pk)
 
-  object TxSeqUtils {
-    def withTextMessage(txs: Iterable[Transaction]): Iterable[Transaction] = txs flatMap {
-      tx =>
-        Option(tx.getMessage).flatMap(msgAppendix => if (!msgAppendix.isText) None else Some(tx))
-    }
+    new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
+      .withPublicKeyAnnouncement(rcpId, pk)
+      .buildSignedAndBroadcast()
+  }
 
-    def betweenTimestamps(txs: Iterable[Transaction], startTime: DateTime, endTime: DateTime) = txs.filter { tx =>
-      val timestamp = tx.getTimestamp * 1000L + Constants.EPOCH_BEGINNING
-      timestamp <= endTime.getMillis && timestamp >= startTime.getMillis
+  def checkThenFixPubKey(phrase: String, senderPhrase: String) = {
+    if (Option(NxtFunctions.addOrGetAccount(phrase).getPublicKey).isEmpty) {
+      publicKeyAnnouncement(phrase, senderPhrase)
     }
   }
+}
+
+object TxSeqUtils {
+  def withTextMessage(txs: Iterable[Transaction]): Iterable[Transaction] = txs flatMap {
+    tx =>
+      Option(tx.getMessage).flatMap(msgAppendix => if (!msgAppendix.isText) None else Some(tx))
+  }
+
+  def betweenTimestamps(txs: Iterable[Transaction], startTime: DateTime, endTime: DateTime) = txs.filter { tx =>
+    val timestamp = tx.getTimestamp * 1000L + Constants.EPOCH_BEGINNING
+    timestamp <= endTime.getMillis && timestamp >= startTime.getMillis
+  }
+}
