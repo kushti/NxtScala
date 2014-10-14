@@ -2,114 +2,243 @@ package nxt.utils
 
 import nxt._
 import nxt.crypto.{EncryptedData, Crypto}
-import scala.util.Try
+import scala.util.{Failure, Try}
 import nxt.Appendix.{EncryptToSelfMessage, EncryptedMessage, Message}
 import org.joda.time.DateTime
 
+abstract class AbstractTransactionBuilder(attachment: Attachment, amount: Long) {
+  type MsgEither = Either[String, Array[Byte]]
 
-case class Messages(plainMessage: Option[String], encryptedMessage: Option[String], encryptedMessageToSelf: Option[String])
+  protected var plainMessage: Option[MsgEither] = None
 
-object Messages {
-  def noMessages = new Messages(None, None, None)
+  protected var nonDefaultFee: Option[Long] = None
+  protected var recipient: Option[Long] = None
+  protected var recipientPublicKey: Option[Array[Byte]] = None
+  protected var referencedTransactionFullHash: Option[String] = None
+  protected var deadline: Short = 1440
 
-  def plainOnly(msg: String) = new Messages(Some(msg), None, None)
+  protected var encryptedMessage: Option[Either[MsgEither, EncryptedMessage]] = None
+  protected var encryptedMessageToSelf: Option[Either[MsgEither, EncryptToSelfMessage]] = None
 
-  def encryptedOnly(msg: String) = new Messages(None, Some(msg), None)
+  val publicKey: Array[Byte]
+  val privateKey: Option[Array[Byte]]
 
-  def encryptedToSelfOnly(msg: String) = new Messages(None, None, Some(msg))
-}
+  def withPublicMessage(message: String) = {
+    plainMessage = Some(Left(message))
+    this
+  }
 
+  def withPublicMessage(message: Array[Byte]) = {
+    plainMessage = Some(Right(message))
+    this
+  }
 
-object TxUtils {
-  val Fee = Constants.ONE_NXT
-  val defaultDeadline: Short = 1440
+  def withFee(txFee: Long) = {
+    nonDefaultFee = Some(txFee)
+    this
+  }
 
-  def issueTx(phrase: String, attachment: Attachment, amount: Long,
-              recipientOpt: Option[Long], rcpPubKeyOpt: Option[Array[Byte]],
-              messages: Messages): Try[Transaction] = Try {
+  def withRecipient(recip: Long) = {
+    recipient = Some(recip)
+    this
+  }
 
-    val pubKey = Crypto.getPublicKey(phrase)
+  def withPublicKeyAnnouncement(recip: Long, rcpPubKey: Array[Byte]) = {
+    recipient = Some(recip)
+    recipientPublicKey = Some(rcpPubKey)
+    this
+  }
 
+  def withReferencedTransaction(referencedTxFullHash: String) = {
+    this.referencedTransactionFullHash = Some(referencedTxFullHash)
+    this
+  }
 
-    val fee = attachment match {
-      case _: Attachment.ColoredCoinsAssetIssuance => NxtFunctions.toNqt(1001)
-      case _: Attachment.MessagingPollCreation => NxtFunctions.toNqt(11)
-      case _ => Fee
-    }
+  def withDeadline(ddl: Short) = {
+    this.deadline = ddl
+    this
+  }
 
-    println(s"Going to issue transaction with attachment to $recipientOpt : ${attachment.getJSONObject}, fee is $fee")
-
-    val tb = Nxt.getTransactionProcessor.newTransactionBuilder(pubKey, amount, fee, defaultDeadline, attachment)
-    recipientOpt.map(rcp => tb.recipientId(rcp))
-    rcpPubKeyOpt.map(pubKey => tb.publicKeyAnnouncement(NxtFunctions.announcement(pubKey)))
-    messages.plainMessage.map(message => tb.message(new Message(message)))
-    messages.encryptedMessage.flatMap{message =>
-      val privKey = Crypto.getPrivateKey(phrase)
-      val theirPubOpt = rcpPubKeyOpt.orElse(recipientOpt.map(id=> Account.getAccount(id).getPublicKey))
-
-      theirPubOpt map { theirPub =>
-        val ed = EncryptedData.encrypt(message.getBytes, privKey, theirPub)
-        tb.encryptedMessage(new EncryptedMessage(ed, true)) //todo: only text messages for now
+  def buildUnsigned(): Try[Transaction] = Try {
+    val fee = nonDefaultFee.getOrElse {
+      attachment match {
+        case _: Attachment.ColoredCoinsAssetIssuance => NxtFunctions.toNqt(1001)
+        case _: Attachment.MessagingPollCreation => NxtFunctions.toNqt(11)
+        case _ => Constants.ONE_NXT
       }
     }
 
-    messages.encryptedMessageToSelf.map{message =>
-      recipientOpt.map {rcpId =>
-        val ed = Account.getAccount(rcpId).encryptTo(message.getBytes, phrase)
-        tb.encryptToSelfMessage(new EncryptToSelfMessage(ed, true)) //todo: only text messages for now
+    val tb = Nxt.getTransactionProcessor.newTransactionBuilder(publicKey, amount, fee, deadline, attachment)
+    plainMessage.map { m => m match {
+      case Left(s) => tb.message(new Message(s))
+      case Right(ba) => tb.message(new Message(ba))
+    }
+    }
+
+    recipient.map(r => tb.recipientId(r))
+    recipientPublicKey.map(pk => tb.publicKeyAnnouncement(NxtFunctions.announcement(pk)))
+
+    referencedTransactionFullHash.map(rt => tb.referencedTransactionFullHash(rt))
+
+    encryptedMessage.map { emEither =>
+      emEither match {
+        case Left(s) =>
+          val privKey = privateKey.get
+          val theirPubOpt = recipientPublicKey.orElse(recipient.map(id => Account.getAccount(id).getPublicKey))
+
+          theirPubOpt map { theirPub =>
+            val (isText, bytes) = if (s.isLeft) (true, s.left.get.getBytes) else (false, s.right.get)
+            val ed = EncryptedData.encrypt(bytes, privKey, theirPub)
+            tb.encryptedMessage(new EncryptedMessage(ed, isText))
+          }
+        case Right(em) => tb.encryptedMessage(em)
       }
     }
 
-    val tx = tb.build()
+    //todo: check
+    encryptedMessageToSelf.map { emEither =>
+      emEither match {
+        case Left(s) =>
+          val (isText, bytes) = if (s.isLeft) (true, s.left.get.getBytes) else (false, s.right.get)
+          val ed = EncryptedData.encrypt(bytes, privateKey.get, publicKey)
+          tb.encryptToSelfMessage(new EncryptToSelfMessage(ed, isText))
 
-    tx.sign(phrase)
-    Nxt.getTransactionProcessor.broadcast(tx)
-    tx
+        case Right(em) => tb.encryptToSelfMessage(em)
+      }
+    }
+
+    tb.build()
   }
 
-  def issueTx(phrase: String, attachment: Attachment, amount: Long, recipientOpt: Option[Long]): Try[Transaction] =
-    issueTx(phrase, attachment, amount, recipientOpt, None, Messages.noMessages)
+  def buildSigned(): Try[Transaction]
+  def buildSignedAndBroadcast(): Try[Transaction]
+}
 
-  def issueTx(phrase: String, attachment: Attachment): Try[Transaction] = issueTx(phrase, attachment, 0, None)
+  class PhraseTransactionBuilder(phrase: String, attachment: Attachment, amount: Long)
+    extends AbstractTransactionBuilder(attachment, amount) {
 
+    override val publicKey = Crypto.getPublicKey(phrase)
+    override val privateKey = Some(Crypto.getPrivateKey(phrase))
 
-  def sendMoney(phrase: String, amount: Long, recipient: Long) =
-    issueTx(phrase, Attachment.ORDINARY_PAYMENT, amount, Some(recipient))
+    def withEncryptedMessage(msg: String) = {
+      this.encryptedMessage = Some(Left(Left(msg)))
+      this
+    }
 
-  def sendMoney(phrase: String, amount: Long, recipient: Long, recipientPubKey:Array[Byte]) =
-    issueTx(phrase, Attachment.ORDINARY_PAYMENT, amount, Some(recipient), Some(recipientPubKey), Messages.noMessages)
+    def withEncryptedMessage(msg: Array[Byte]) = {
+      this.encryptedMessage = Some(Left(Right(msg)))
+      this
+    }
 
-  def sendMessage(phrase: String, text: String, recipient: Option[Long]) =
-    issueTx(phrase, Attachment.ARBITRARY_MESSAGE, 0, recipient, None, Messages.plainOnly(text))
+    def withEncryptedMessageToSelf(msg: String) = {
+      this.encryptedMessageToSelf = Some(Left(Left(msg)))
+      this
+    }
 
-  def sendMessage(phrase: String, text: String, recipient: Long) =
-    issueTx(phrase, Attachment.ARBITRARY_MESSAGE, 0, Some(recipient), None, Messages.plainOnly(text))
+    def withEncryptedMessageToSelf(msg: Array[Byte]) = {
+      this.encryptedMessageToSelf = Some(Left(Right(msg)))
+      this
+    }
 
-  def sendMessage(phrase: String, text: String) =
-    issueTx(phrase, Attachment.ARBITRARY_MESSAGE, 0, None, None, Messages.plainOnly(text))
+    override def buildSigned(): Try[Transaction] = buildUnsigned().map { tx => tx.sign(phrase); tx}
 
-  def publicKeyAnnouncement(phrase: String, senderPhrase:String) = {
-    val pk = Crypto.getPublicKey(phrase)
-    val accId = Account.getId(pk)
-    issueTx(senderPhrase, Attachment.ORDINARY_PAYMENT, 1, Some(accId), Some(pk), Messages.noMessages)
+    override def buildSignedAndBroadcast() = buildSigned().map { tx => Nxt.getTransactionProcessor.broadcast(tx); tx}
   }
 
-  def checkThenFixPubKey(phrase: String, senderPhrase:String) = {
-    if (Option(NxtFunctions.addOrGetAccount(phrase).getPublicKey).isEmpty) {
-      publicKeyAnnouncement(phrase, senderPhrase)
+  class PubKeyTransacionBuilder(pubKey: Array[Byte], attachment: Attachment, amount: Long)
+    extends AbstractTransactionBuilder(attachment, amount) {
+
+    override val publicKey = pubKey
+    override val privateKey = None
+
+    def withEncryptedMessage(msg: EncryptedMessage) = {
+      this.encryptedMessage = Some(Right(msg))
+      this
+    }
+
+    def withEncryptedMessageToSelf(msg: EncryptToSelfMessage) = {
+      this.encryptedMessageToSelf = Some(Right(msg))
+      this
+    }
+
+    override def buildSigned(): Try[Transaction] = throw new IllegalStateException("Can't sign transaction with just public key")
+    override def buildSignedAndBroadcast(): Try[Transaction] = buildSigned()
+  }
+
+  //todo: use Cake Pattern for just tx bytes generation
+  object TransactionTemplates {
+
+    def issueTx(phrase: String, attachment: Attachment, amount: Long): Try[Transaction] =
+      new PhraseTransactionBuilder(phrase, attachment, amount).buildSignedAndBroadcast()
+
+    def issueTx(phrase: String, attachment: Attachment): Try[Transaction] = issueTx(phrase, attachment, 0)
+
+    def sendMoney(phrase: String, amount: Long, recipient: Long) =
+      new PhraseTransactionBuilder(phrase, Attachment.ORDINARY_PAYMENT, amount)
+        .withRecipient(recipient)
+        .buildSignedAndBroadcast()
+
+    def sendMoney(phrase: String, amount: Long, recipient: Long, recipientPubKey: Array[Byte]) =
+      new PhraseTransactionBuilder(phrase, Attachment.ORDINARY_PAYMENT, amount)
+        .withPublicKeyAnnouncement(recipient, recipientPubKey)
+        .buildSignedAndBroadcast()
+
+
+
+    def sendPublicMessage(phrase: String, text: String, recipient: Long) =
+      new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
+        .withRecipient(recipient)
+        .withPublicMessage(text)
+        .buildSignedAndBroadcast()
+
+    def sendPublicMessage(phrase: String, text: String) =
+      new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
+        .withPublicMessage(text)
+        .buildSignedAndBroadcast()
+
+
+    def sendPublicMultipartMessage(phrase: String, text:String):Try[Transaction] = {
+      val partSize = Constants.MAX_ARBITRARY_MESSAGE_LENGTH
+      if(text.size>partSize*10) Failure(new IllegalArgumentException("Too long text"))
+      val parts = text.grouped(1000).toList
+      val headTxTry = sendPublicMessage(phrase, parts.head)
+
+      parts.tail.foldLeft[Try[Transaction]](headTxTry){case (tr, part) =>
+        tr.map{prevTx=>
+          val fh = prevTx.getFullHash
+          new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
+            .withPublicMessage(part)
+            .withReferencedTransaction(fh)
+            .buildSignedAndBroadcast()
+        }.flatten
+      }
+    }
+
+    def publicKeyAnnouncement(phrase: String, senderPhrase: String) = {
+      val pk = Crypto.getPublicKey(phrase)
+      val rcpId = Account.getId(pk)
+
+      new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
+        .withPublicKeyAnnouncement(rcpId, pk)
+        .buildSignedAndBroadcast()
+    }
+
+    def checkThenFixPubKey(phrase: String, senderPhrase: String) = {
+      if (Option(NxtFunctions.addOrGetAccount(phrase).getPublicKey).isEmpty) {
+        publicKeyAnnouncement(phrase, senderPhrase)
+      }
     }
   }
-}
 
 
-object TxSeqUtils {
-  def withTextMessage(txs: Iterable[Transaction]): Iterable[Transaction] = txs flatMap {
-    tx =>
-      Option(tx.getMessage).flatMap(msgAppendix => if (!msgAppendix.isText) None else Some(tx))
+  object TxSeqUtils {
+    def withTextMessage(txs: Iterable[Transaction]): Iterable[Transaction] = txs flatMap {
+      tx =>
+        Option(tx.getMessage).flatMap(msgAppendix => if (!msgAppendix.isText) None else Some(tx))
+    }
+
+    def betweenTimestamps(txs: Iterable[Transaction], startTime: DateTime, endTime: DateTime) = txs.filter { tx =>
+      val timestamp = tx.getTimestamp * 1000L + Constants.EPOCH_BEGINNING
+      timestamp <= endTime.getMillis && timestamp >= startTime.getMillis
+    }
   }
-
-  def betweenTimestamps(txs: Iterable[Transaction], startTime:DateTime, endTime:DateTime) = txs.filter{tx =>
-    val timestamp = tx.getTimestamp*1000L + Constants.EPOCH_BEGINNING
-    timestamp <= endTime.getMillis && timestamp >= startTime.getMillis
-  }
-}

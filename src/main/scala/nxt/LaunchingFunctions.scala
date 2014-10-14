@@ -4,7 +4,7 @@ import java.util.Properties
 import java.lang.reflect._
 import scala.concurrent.duration._
 import nxt.NxtFunctions._
-import nxt.utils.TxUtils._
+import nxt.utils.TransactionTemplates._
 import nxt.utils.WaitingUtils._
 
 object LaunchingFunctions {

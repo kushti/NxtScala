@@ -14,7 +14,7 @@ object NxtFunctions {
     t
   }
 
-  def height = Nxt.getBlockchain.getHeight
+  def currentHeight = Nxt.getBlockchain.getHeight
 
   def lastFeederHeight = Nxt.getBlockchainProcessor.getLastBlockchainFeederHeight
 
@@ -54,7 +54,7 @@ object NxtFunctions {
     * @param howMany
     */
   def forgetLastBlocks(howMany:Int):Unit = {
-    BlockchainProcessorImpl.getInstance().popOffTo(NxtFunctions.height - howMany)
+    BlockchainProcessorImpl.getInstance().popOffTo(NxtFunctions.currentHeight - howMany)
     val tpi = TransactionProcessorImpl.getInstance()
     tpi.removeUnconfirmedTransactions(tpi.getAllUnconfirmedTransactions, false)
   }

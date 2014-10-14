@@ -20,7 +20,7 @@ object AssetFunctions {
 
   //todo: totally ineffective method, should be fixed after 1.3.0
   def assetOwners(assetId:Long):AssetOwners = {
-    val height = NxtFunctions.height
+    val height = NxtFunctions.currentHeight
     val asset = Asset.getAsset(assetId)
     val issuer = asset.getAccountId
     val total = asset.getQuantityQNT
