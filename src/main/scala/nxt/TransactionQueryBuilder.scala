@@ -48,8 +48,3 @@ class TransactionQueryBuilder {
     }
   }
 }
-
-
-class BlockImplWrapper{
-  def getHeight(id:Long):Option[Int] = Option(BlockDb.findBlock(id)).map(_.getHeight)
-}

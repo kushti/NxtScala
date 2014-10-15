@@ -15,7 +15,7 @@ object NxtFunctions {
   }
 
   def currentHeight = Nxt.getBlockchain.getHeight
-
+  def heightOfBlock(id:Long):Option[Int] = Option(BlockDb.findBlock(id)).map(_.getHeight)
   def lastFeederHeight = Nxt.getBlockchainProcessor.getLastBlockchainFeederHeight
 
   def balanceNqt(id:Long):Long = Option(Account.getAccount(id)).map(_.getBalanceNQT).getOrElse(0)
