@@ -50,6 +50,15 @@ object NxtFunctions {
     Nxt.getBlockchainProcessor.asInstanceOf[BlockchainProcessorImpl].generateBlock(phrase, Convert.getEpochTime)
 
   /**
+   * Return current time in Nxt Epoch Format(number of seconds from genesis block). It was a part of
+   * nxt.util.Convert before 1.3.0
+   * @return number of seconds since genesis
+   */
+  def getEpochTime: Int = {
+    return ((System.currentTimeMillis - Constants.EPOCH_BEGINNING + 500) / 1000).toInt
+  }
+
+  /**
     * Pop off blocks and then remove unconfirmed transactions
     * @param howMany
     */
