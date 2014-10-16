@@ -47,7 +47,7 @@ object NxtFunctions {
   def accountIds(phrases:Seq[String]):Seq[Long] = phrases map accountId
 
   def generateBlock(phrase:String) =
-    Nxt.getBlockchainProcessor.asInstanceOf[BlockchainProcessorImpl].generateBlock(phrase, Convert.getEpochTime)
+    Nxt.getBlockchainProcessor.asInstanceOf[BlockchainProcessorImpl].generateBlock(phrase, getEpochTime)
 
   /**
    * Return current time in Nxt Epoch Format(number of seconds from genesis block). It was a part of
