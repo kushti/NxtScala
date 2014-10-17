@@ -59,7 +59,7 @@ abstract class AbstractTransactionBuilder(attachment: Attachment, amount: Long) 
     this
   }
 
-  def buildUnsigned(): Try[Transaction] = Try {
+  def unsigned(): Try[Transaction] = Try {
     val fee = nonDefaultFee.getOrElse {
       attachment match {
         case _: Attachment.ColoredCoinsAssetIssuance => NxtFunctions.toNqt(1001)
@@ -110,9 +110,9 @@ abstract class AbstractTransactionBuilder(attachment: Attachment, amount: Long) 
     tb.build()
   }
 
-  def buildSigned(): Try[Transaction]
+  def signed(): Try[Transaction]
 
-  def buildSignedAndBroadcast(): Try[Transaction]
+  def broadcastSigned(): Try[Transaction]
 }
 
 class PhraseTransactionBuilder(phrase: String, attachment: Attachment, amount: Long)
@@ -141,9 +141,9 @@ class PhraseTransactionBuilder(phrase: String, attachment: Attachment, amount: L
     this
   }
 
-  override def buildSigned(): Try[Transaction] = buildUnsigned().map { tx => tx.sign(phrase); tx}
+  override def signed(): Try[Transaction] = unsigned().map { tx => tx.sign(phrase); tx}
 
-  override def buildSignedAndBroadcast() = buildSigned().map { tx => Nxt.getTransactionProcessor.broadcast(tx); tx}
+  override def broadcastSigned() = signed().map { tx => Nxt.getTransactionProcessor.broadcast(tx); tx}
 }
 
 class PubKeyTransacionBuilder(pubKey: Array[Byte], attachment: Attachment, amount: Long)
@@ -162,40 +162,45 @@ class PubKeyTransacionBuilder(pubKey: Array[Byte], attachment: Attachment, amoun
     this
   }
 
-  override def buildSigned(): Try[Transaction] = throw new IllegalStateException("Can't sign transaction with just public key")
+  override def signed(): Try[Transaction] = throw new IllegalStateException("Can't sign transaction with just public key")
 
-  override def buildSignedAndBroadcast(): Try[Transaction] = buildSigned()
+  override def broadcastSigned(): Try[Transaction] = signed()
 }
 
 //todo: use Cake Pattern for just tx bytes generation?
 object TransactionTemplates {
 
   def issueTx(phrase: String, attachment: Attachment, amount: Long): Try[Transaction] =
-    new PhraseTransactionBuilder(phrase, attachment, amount).buildSignedAndBroadcast()
+    new PhraseTransactionBuilder(phrase, attachment, amount).broadcastSigned()
 
   def issueTx(phrase: String, attachment: Attachment): Try[Transaction] = issueTx(phrase, attachment, 0)
+
+  def assetTransfer(phrase:String, receiverId:Long, assetId:Long, qntAmount:Long, comment:String):Try[Transaction] = {
+    val att = new Attachment.ColoredCoinsAssetTransfer(assetId, qntAmount, "no comments")
+    new PhraseTransactionBuilder(phrase, att, 0).withRecipient(receiverId).broadcastSigned()
+  }
 
   def sendMoney(phrase: String, amount: Long, recipient: Long) =
     new PhraseTransactionBuilder(phrase, Attachment.ORDINARY_PAYMENT, amount)
       .withRecipient(recipient)
-      .buildSignedAndBroadcast()
+      .broadcastSigned()
 
   def sendMoney(phrase: String, amount: Long, recipient: Long, recipientPubKey: Array[Byte]) =
     new PhraseTransactionBuilder(phrase, Attachment.ORDINARY_PAYMENT, amount)
       .withPublicKeyAnnouncement(recipient, recipientPubKey)
-      .buildSignedAndBroadcast()
+      .broadcastSigned()
 
 
   def sendPublicMessage(phrase: String, text: String, recipient: Long) =
     new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
       .withRecipient(recipient)
       .withPublicMessage(text)
-      .buildSignedAndBroadcast()
+      .broadcastSigned()
 
   def sendPublicMessage(phrase: String, text: String) =
     new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
       .withPublicMessage(text)
-      .buildSignedAndBroadcast()
+      .broadcastSigned()
 
 
   def sendPublicMultipartMessage(phrase: String, text: String): Try[Transaction] = {
@@ -211,7 +216,7 @@ object TransactionTemplates {
             new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
               .withPublicMessage(part)
               .withReferencedTransaction(fh)
-              .buildSignedAndBroadcast()
+              .broadcastSigned()
           }.flatten
         }.map{_ => headTx}
     }
@@ -223,7 +228,7 @@ object TransactionTemplates {
 
     new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
       .withPublicKeyAnnouncement(rcpId, pk)
-      .buildSignedAndBroadcast()
+      .broadcastSigned()
   }
 
   def checkThenFixPubKey(phrase: String, senderPhrase: String) = {
