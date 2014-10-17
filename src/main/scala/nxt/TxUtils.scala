@@ -1,5 +1,6 @@
 package nxt.utils
 
+import nxt.Attachment.MessagingAliasBuy
 import nxt._
 import nxt.crypto.{EncryptedData, Crypto}
 import scala.util.{Success, Failure, Try}
@@ -175,7 +176,7 @@ object TransactionTemplates {
 
   def issueTx(phrase: String, attachment: Attachment): Try[Transaction] = issueTx(phrase, attachment, 0)
 
-  def assetTransfer(phrase:String, receiverId:Long, assetId:Long, qntAmount:Long, comment:String):Try[Transaction] = {
+  def transferAssets(phrase:String, receiverId:Long, assetId:Long, qntAmount:Long, comment:String):Try[Transaction] = {
     val att = new Attachment.ColoredCoinsAssetTransfer(assetId, qntAmount, "no comments")
     new PhraseTransactionBuilder(phrase, att, 0).withRecipient(receiverId).broadcastSigned()
   }
@@ -231,10 +232,23 @@ object TransactionTemplates {
       .broadcastSigned()
   }
 
-  def checkThenFixPubKey(phrase: String, senderPhrase: String) = {
+  def checkThenFixPubKey(phrase: String, senderPhrase: String):Option[Try[Transaction]] = {
     if (Option(NxtFunctions.addOrGetAccount(phrase).getPublicKey).isEmpty) {
-      publicKeyAnnouncement(phrase, senderPhrase)
-    }
+      Some(publicKeyAnnouncement(phrase, senderPhrase))
+    } else None
+  }
+
+  def sellAlias(phrase:String, alias:String, priceNqt:Long, buyerIdOpt:Option[Long]):Try[Transaction] = {
+    val att = new Attachment.MessagingAliasSell(alias, priceNqt)
+    val ptb = new PhraseTransactionBuilder(phrase, att, 0)
+    buyerIdOpt.map(rcp => ptb.withRecipient(rcp)).getOrElse(ptb).broadcastSigned()
+  }
+
+  def transferAlias(phrase:String, alias:String, recipientId:Long) = sellAlias(phrase, alias, 0, Some(recipientId))
+
+  def buyAlias(phrase:String, alias:String, priceNqt:Long, sellerId:Long): Try[Transaction] ={
+    val att = new Attachment.MessagingAliasBuy(alias)
+    new PhraseTransactionBuilder(phrase, att, priceNqt).withRecipient(sellerId).broadcastSigned()
   }
 }
 
