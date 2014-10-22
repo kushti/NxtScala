@@ -1,13 +1,15 @@
 package nxt.utils
 
-import nxt.Attachment.MessagingAliasBuy
 import nxt._
 import nxt.crypto.{EncryptedData, Crypto}
-import scala.util.{Success, Failure, Try}
+import scala.util.{Failure, Try}
 import nxt.Appendix.{EncryptToSelfMessage, EncryptedMessage, Message}
 import org.joda.time.DateTime
 
+
 abstract class AbstractTransactionBuilder(attachment: Attachment, amount: Long) {
+  type Self <: AbstractTransactionBuilder
+
   type MsgEither = Either[String, Array[Byte]]
 
   protected var plainMessage: Option[MsgEither] = None
@@ -24,40 +26,40 @@ abstract class AbstractTransactionBuilder(attachment: Attachment, amount: Long) 
   val publicKey: Array[Byte]
   val privateKey: Option[Array[Byte]]
 
-  def withPublicMessage(message: String) = {
+  def withPublicMessage(message: String):Self = {
     plainMessage = Some(Left(message))
-    this
+    this.asInstanceOf[Self]
   }
 
   def withPublicMessage(message: Array[Byte]) = {
     plainMessage = Some(Right(message))
-    this
+    this.asInstanceOf[Self]
   }
 
   def withFee(txFee: Long) = {
     nonDefaultFee = Some(txFee)
-    this
+    this.asInstanceOf[Self]
   }
 
   def withRecipient(recip: Long) = {
     recipient = Some(recip)
-    this
+    this.asInstanceOf[Self]
   }
 
   def withPublicKeyAnnouncement(recip: Long, rcpPubKey: Array[Byte]) = {
     recipient = Some(recip)
     recipientPublicKey = Some(rcpPubKey)
-    this
+    this.asInstanceOf[Self]
   }
 
   def withReferencedTransaction(referencedTxFullHash: String) = {
     this.referencedTransactionFullHash = Some(referencedTxFullHash)
-    this
+    this.asInstanceOf[Self]
   }
 
   def withDeadline(ddl: Short) = {
     this.deadline = ddl
-    this
+    this.asInstanceOf[Self]
   }
 
   def unsigned(): Try[Transaction] = Try {
@@ -116,8 +118,11 @@ abstract class AbstractTransactionBuilder(attachment: Attachment, amount: Long) 
   def broadcastSigned(): Try[Transaction]
 }
 
+
 class PhraseTransactionBuilder(phrase: String, attachment: Attachment, amount: Long)
   extends AbstractTransactionBuilder(attachment, amount) {
+
+  type Self = PhraseTransactionBuilder
 
   override val publicKey = Crypto.getPublicKey(phrase)
   override val privateKey = Some(Crypto.getPrivateKey(phrase))
@@ -150,6 +155,8 @@ class PhraseTransactionBuilder(phrase: String, attachment: Attachment, amount: L
 class PubKeyTransacionBuilder(pubKey: Array[Byte], attachment: Attachment, amount: Long)
   extends AbstractTransactionBuilder(attachment, amount) {
 
+  type Self = PubKeyTransacionBuilder
+
   override val publicKey = pubKey
   override val privateKey = None
 
@@ -177,7 +184,7 @@ object TransactionTemplates {
   def issueTx(phrase: String, attachment: Attachment): Try[Transaction] = issueTx(phrase, attachment, 0)
 
   def transferAssets(phrase:String, receiverId:Long, assetId:Long, qntAmount:Long, comment:String):Try[Transaction] = {
-    val att = new Attachment.ColoredCoinsAssetTransfer(assetId, qntAmount, "no comments")
+    val att = new Attachment.ColoredCoinsAssetTransfer(assetId, qntAmount)
     new PhraseTransactionBuilder(phrase, att, 0).withRecipient(receiverId).broadcastSigned()
   }
 

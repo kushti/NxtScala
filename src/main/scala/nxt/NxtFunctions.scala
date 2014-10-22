@@ -43,7 +43,7 @@ object NxtFunctions {
 
   def transactionById(id:Long) = Option(TransactionDb.findTransaction(id))
 
-  def accountId(phrase:String) = Account.getId(Crypto.getPublicKey(phrase)).toLong
+  def accountId(phrase:String):Long = Account.getId(Crypto.getPublicKey(phrase))
   def accountIds(phrases:Seq[String]):Seq[Long] = phrases map accountId
 
   def generateBlock(phrase:String) =
@@ -64,7 +64,6 @@ object NxtFunctions {
     */
   def forgetLastBlocks(howMany:Int):Unit = {
     BlockchainProcessorImpl.getInstance().popOffTo(NxtFunctions.currentHeight - howMany)
-    val tpi = TransactionProcessorImpl.getInstance()
-    tpi.removeUnconfirmedTransactions(tpi.getAllUnconfirmedTransactions, false)
+    TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions()
   }
 }
