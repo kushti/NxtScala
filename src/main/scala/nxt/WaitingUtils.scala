@@ -8,30 +8,6 @@ import scala.collection.concurrent.TrieMap
 import scala.util.Random
 
 
-object FastBlocksGenerator{
-  private def runInAnotherThread(fn: =>Unit): Unit = new Thread(new Runnable() {
-    override def run() {
-      while (true) {
-        fn
-      }
-    }
-  }).start()
-
-  private def simple(generatorPhrase:String) : Unit = {
-    Thread.sleep(1250)
-    NxtFunctions.generateBlock(generatorPhrase)
-  }
-
-  def runSimple(generatorPhrase:String) = runInAnotherThread(simple(generatorPhrase))
-
-  def runWithForks(generatorPhrase:String) = {
-    runSimple(generatorPhrase)
-    if(Random.nextInt(10)==7){
-      NxtFunctions.forgetLastBlocks(Random.nextInt(2)+1)
-    }
-  }
-}
-
 object WaitingUtils {
   import NxtFunctions._
 

@@ -2,8 +2,6 @@ package nxt
 
 import java.util.Properties
 import java.lang.reflect._
-import nxt.utils.FastBlocksGenerator
-
 import scala.concurrent.duration._
 import nxt.NxtFunctions._
 import nxt.utils.TransactionTemplates._
@@ -24,17 +22,8 @@ object LaunchingFunctions {
       val propsRes = getClass.getClassLoader.getResource("nxt-default.properties")
       System.setProperty("nxt-default.properties", propsRes.getFile)
       val props = new Properties()
+      Option(getClass.getClassLoader.getResourceAsStream("nxt.properties")).map(props.load)
       Nxt.init(props)
-  }
-
-  def launchAndForge(forgingPhrase:String){
-    val propsRes = getClass.getClassLoader.getResource("nxt-default.properties")
-    System.setProperty("nxt-default.properties", propsRes.getFile)
-    val props = new Properties()
-    Option(getClass.getClassLoader.getResourceAsStream("nxt.properties")).map(props.load)
-    setFinalStatic(classOf[nxt.Constants].getField("DIGITAL_GOODS_STORE_BLOCK"), 0)
-    Nxt.init(props)
-    FastBlocksGenerator.runSimple(forgingPhrase)
   }
 
   //todo: better place  ??
