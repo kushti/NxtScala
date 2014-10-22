@@ -234,7 +234,7 @@ object TransactionTemplates {
     val pk = Crypto.getPublicKey(phrase)
     val rcpId = Account.getId(pk)
 
-    new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
+    new PhraseTransactionBuilder(senderPhrase, Attachment.ARBITRARY_MESSAGE, 0)
       .withPublicKeyAnnouncement(rcpId, pk)
       .broadcastSigned()
   }
