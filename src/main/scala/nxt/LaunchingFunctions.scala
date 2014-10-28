@@ -1,22 +1,14 @@
 package nxt
 
 import java.util.Properties
-import java.lang.reflect._
+import scala.annotation.tailrec
 import scala.concurrent.duration._
 import nxt.NxtFunctions._
 import nxt.utils.TransactionTemplates._
 import nxt.utils.WaitingUtils._
 
+
 object LaunchingFunctions {
-  private def setFinalStatic(field:Field, newValue: Any){
-    field.setAccessible(true)
-
-    val modifiersField = classOf[Field].getDeclaredField("modifiers")
-    modifiersField.setAccessible(true)
-    modifiersField.setInt(field, field.getModifiers & ~Modifier.FINAL)
-
-    field.set(null, newValue)
-  }
 
   def launch(): Unit = {
       val propsRes = getClass.getClassLoader.getResource("nxt-default.properties")
@@ -24,6 +16,23 @@ object LaunchingFunctions {
       val props = new Properties()
       Option(getClass.getClassLoader.getResourceAsStream("nxt.properties")).map(props.load)
       Nxt.init(props)
+  }
+
+  def waitForDownloadingDone(){
+    @tailrec
+    def downloadStep():Unit = {
+      val lfh = NxtFunctions.lastFeederHeight
+      val ch = NxtFunctions.currentHeight
+
+      println(s"Last feeder height: $lfh, local height: $ch, isOffline: ${Constants.isOffline}")
+
+      if ( !(Constants.isOffline || ((lfh!=0) && (lfh - ch) < 2))){
+        println("Still downloading blockchain...")
+        Thread.sleep(5000)
+        downloadStep()
+      }
+    }
+    downloadStep()
   }
 
   //todo: better place  ??
