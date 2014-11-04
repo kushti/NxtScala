@@ -1,5 +1,6 @@
 package nxt
 
+import java.io.{FileReader, File}
 import java.util.Properties
 import scala.annotation.tailrec
 import scala.concurrent.duration._
@@ -10,11 +11,26 @@ import nxt.utils.WaitingUtils._
 
 object LaunchingFunctions {
 
-  def launch(): Unit = {
-      val propsRes = getClass.getClassLoader.getResource("nxt-default.properties")
-      System.setProperty("nxt-default.properties", propsRes.getFile)
-      val props = new Properties()
-      Option(getClass.getClassLoader.getResourceAsStream("nxt.properties")).map(props.load)
+  def launch(): Unit = launch(None)
+
+  def launch(confDirOpt:Option[String]): Unit = {
+    val props = new Properties()
+
+    confDirOpt match {
+      case Some(confDir) =>
+        System.setProperty("nxt-default.properties",confDir+"/nxt-default.properties")
+
+        val propsFile = new File(confDir+"/nxt.properties")
+        if(propsFile.exists()){
+          props.load(new FileReader(propsFile))
+        }
+
+      case None =>
+          val propsRes = getClass.getClassLoader.getResource ("nxt-default.properties")
+          System.setProperty ("nxt-default.properties", propsRes.getFile)
+          Option (getClass.getClassLoader.getResourceAsStream ("nxt.properties") ).map (props.load)
+    }
+
       Nxt.init(props)
   }
 
