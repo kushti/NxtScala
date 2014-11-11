@@ -2,15 +2,14 @@ package nxt
 
 import nxt.crypto.Crypto
 import nxt.Appendix.PublicKeyAnnouncement
-import nxt.util.Convert
-import nxt.db.Db
+import nxt.Db
 
 object NxtFunctions {
 
   def withinDbTransaction[T](fn: => T):T={
-    Db.beginTransaction()
+    Db.db.beginTransaction()
     val t = fn
-    Db.endTransaction()
+    Db.db.endTransaction()
     t
   }
 

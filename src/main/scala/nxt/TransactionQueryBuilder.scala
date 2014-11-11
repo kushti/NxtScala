@@ -3,7 +3,7 @@ package nxt
 import scala.util.{Failure, Success, Try}
 import java.sql.{ResultSet, Connection}
 import resource._
-import nxt.db.Db
+import nxt.Db
 
 class TransactionQueryBuilder {
 
@@ -37,7 +37,7 @@ class TransactionQueryBuilder {
   def query():Try[Seq[Transaction]] = {
     println(s"Going to execute query: $sql")
     Try{
-      managed(Db.getConnection).map {con=>
+      managed(Db.db.getConnection).map {con=>
         val pstmt = con.prepareStatement(sql)
         val rs: ResultSet = pstmt.executeQuery
         new Iterator[Transaction] {

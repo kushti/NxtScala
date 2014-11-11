@@ -214,7 +214,7 @@ object TransactionTemplates {
   def sendPublicMultipartMessage(phrase: String, text: String): Try[Transaction] = {
     val partSize = Constants.MAX_ARBITRARY_MESSAGE_LENGTH
     if (text.size > partSize * 10) Failure(new IllegalArgumentException("Too long text"))
-    val parts = text.grouped(1000).toList
+    val parts = text.grouped(partSize).toList
     val headTxTry = sendPublicMessage(phrase, parts.head)
 
     headTxTry.flatMap{headTx =>
