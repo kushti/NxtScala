@@ -53,16 +53,16 @@ object NxtFunctions {
    * nxt.util.Convert before 1.3.0
    * @return number of seconds since genesis
    */
-  def getEpochTime: Int = {
-    return ((System.currentTimeMillis - Constants.EPOCH_BEGINNING + 500) / 1000).toInt
-  }
+  def getEpochTime: Int =
+    ((System.currentTimeMillis - Constants.EPOCH_BEGINNING + 500) / 1000).toInt
+
 
   /**
-    * Pop off blocks and then remove unconfirmed transactions
+    * Pop off blocks and then remove unconfirmed transactions if needed
     * @param howMany
     */
-  def forgetLastBlocks(howMany:Int):Unit = {
+  def forgetLastBlocks(howMany:Int, removeUnconfirmedTransactions:Boolean):Unit = {
     BlockchainProcessorImpl.getInstance().popOffTo(NxtFunctions.currentHeight - howMany)
-    TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions()
+    if(removeUnconfirmedTransactions) TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions()
   }
 }
