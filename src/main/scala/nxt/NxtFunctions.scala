@@ -2,7 +2,6 @@ package nxt
 
 import nxt.crypto.Crypto
 import nxt.Appendix.PublicKeyAnnouncement
-import nxt.Db
 
 object NxtFunctions {
 
@@ -31,7 +30,7 @@ object NxtFunctions {
   def balancesNxt(phrases:String*):Seq[Long] = phrases.map(balanceNqt).map(toNxt)
 
   def getAssetBalance(accountId:Long, assetId:Long):Long =
-    Option(Account.getAccount(accountId)).map(_.getAssetBalanceQNT(assetId)).getOrElse(0L)
+    Option(Account.getAccount(accountId)).map(_.getAssetBalanceQNT(assetId)).getOrElse(0:Long)
 
   //as class constructor has package-wide visibility
   def announcement(pubKey:Array[Byte]) = new PublicKeyAnnouncement(pubKey)

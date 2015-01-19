@@ -1,9 +1,8 @@
 package nxt
 
-import scala.util.{Failure, Success, Try}
-import java.sql.{ResultSet, Connection}
+import scala.util.Try
+import java.sql.ResultSet
 import resource._
-import nxt.Db
 
 class TransactionQueryBuilder {
 

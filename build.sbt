@@ -4,7 +4,7 @@ name := "nxtscala"
 
 version := "0.1.51"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.5"
 
 scalacOptions in Test ++= Seq("-Yrangepos")
 
@@ -15,10 +15,10 @@ resolvers += "Sonatype Releases" at "http://oss.sonatype.org/content/repositorie
 resolvers += "Typesafe maven releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
 
 libraryDependencies ++= Seq(
-    "org.scala-lang" % "scala-reflect" % "2.10.4",
-    "com.github.nscala-time" %% "nscala-time" % "0.4.2",
-    "com.jsuereth" %% "scala-arm" % "1.3",
-    "org.scalatest" % "scalatest_2.10" % "2.2.1" % "test"
+    "org.scala-lang.plugins" %% "scala-continuations-library" % "1.0.2",
+    "com.github.nscala-time" %% "nscala-time" % "1.6.0",
+    "com.jsuereth" % "scala-arm_2.10" % "1.3",
+    "org.scalatest" %% "scalatest" % "2.2.1" % "test"
 )
 
 publishMavenStyle := true

@@ -71,12 +71,11 @@ abstract class AbstractTransactionBuilder(attachment: Attachment, amount: Long) 
       }
     }
 
-    val tb = Nxt.getTransactionProcessor.newTransactionBuilder(publicKey, amount, fee, deadline, attachment)
+    val tb = Nxt.newTransactionBuilder(publicKey, amount, fee, deadline, attachment)
     plainMessage.map { m => m match {
       case Left(s) => tb.message(new Message(s))
       case Right(ba) => tb.message(new Message(ba))
-    }
-    }
+    }}
 
     recipient.map(r => tb.recipientId(r))
     recipientPublicKey.map(pk => tb.publicKeyAnnouncement(NxtFunctions.announcement(pk)))
