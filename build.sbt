@@ -2,7 +2,7 @@ organization := "nxt"
 
 name := "nxtscala"
 
-version := "0.1.51"
+version := "0.1.52"
 
 scalaVersion := "2.11.5"
 
