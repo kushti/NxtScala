@@ -21,6 +21,12 @@ object NxtFunctions {
   def balancesNqt(phrases:String*):Seq[Long] = phrases.map(balanceNqt)
   def totalNqt(phrases:String*):Long = phrases.map(balanceNqt).sum
 
+  def unconfirmedBalanceNqt(id:Long):Long = 
+    Option(Account.getAccount(id)).map(_.getUnconfirmedBalanceNQT).getOrElse(0)
+  def unconfirmedBalanceNqt(phrase:String):Long = unconfirmedBalanceNqt(accountId(phrase))
+  def unconfirmedBalancesNqt(phrases:String*):Seq[Long] = phrases.map(unconfirmedBalanceNqt)
+  
+
   def toNqt(nxt:Long) = nxt * Constants.ONE_NXT
   def toNxt(nqt:Long) = nqt / Constants.ONE_NXT
 
@@ -29,8 +35,23 @@ object NxtFunctions {
   def totalNxt(phrases:String*):Long = toNxt(totalNqt(phrases:_*))
   def balancesNxt(phrases:String*):Seq[Long] = phrases.map(balanceNqt).map(toNxt)
 
-  def getAssetBalance(accountId:Long, assetId:Long):Long =
+  def assetBalance(assetId:Long)(accountId:Long):Long =
     Option(Account.getAccount(accountId)).map(_.getAssetBalanceQNT(assetId)).getOrElse(0:Long)
+
+  def assetBalances(assetId:Long, accountIds:Long*):Seq[Long] =
+    accountIds.map(assetBalance(assetId))
+
+  def unconfirmedAssetBalance(assetId:Long)(accountId:Long):Long =
+    Option(Account.getAccount(accountId)).map(_.getUnconfirmedAssetBalanceQNT(assetId)).getOrElse(0:Long)
+
+  def unconfirmedAssetBalances(assetId:Long)(accountIds:Long*):Seq[Long] =
+    accountIds.map(unconfirmedAssetBalance(assetId))
+
+  def msTokenBalance(accountId:Long, currencyId:Long):Long =
+    Option(Account.getAccount(accountId)).map(_.getCurrencyUnits(currencyId)).getOrElse(0:Long)
+
+  def unconfirmedMsTokenBalance(accountId:Long, currencyId:Long):Long =
+    Option(Account.getAccount(accountId)).map(_.getUnconfirmedCurrencyUnits(currencyId)).getOrElse(0:Long)
 
   //as class constructor has package-wide visibility
   def announcement(pubKey:Array[Byte]) = new PublicKeyAnnouncement(pubKey)
@@ -43,9 +64,6 @@ object NxtFunctions {
 
   def accountId(phrase:String):Long = Account.getId(Crypto.getPublicKey(phrase))
   def accountIds(phrases:Seq[String]):Seq[Long] = phrases map accountId
-
-  def generateBlock(phrase:String) =
-    Nxt.getBlockchainProcessor.asInstanceOf[BlockchainProcessorImpl].generateBlock(phrase, getEpochTime)
 
   /**
    * Return current time in Nxt Epoch Format(number of seconds from genesis block). It was a part of
