@@ -1,5 +1,6 @@
 package nxt
 
+import nxt.util.Logger
 import scala.util.Try
 import java.sql.ResultSet
 import resource._
@@ -34,7 +35,7 @@ class TransactionQueryBuilder {
   def withReferenceToTransaction(tx:Transaction) = withPrefix(s"AND referenced_transaction_full_hash = '${tx.getFullHash}'")
 
   def query():Try[Seq[Transaction]] = {
-    println(s"Going to execute query: $sql")
+    Logger.logDebugMessage(s"Going to execute query: $sql")
     Try{
       managed(Db.db.getConnection).map {con=>
         val pstmt = con.prepareStatement(sql)

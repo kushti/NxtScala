@@ -2,6 +2,8 @@ package nxt
 
 import java.io.{FileReader, File}
 import java.util.Properties
+import nxt.util.Logger
+
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 import nxt.NxtFunctions._
@@ -40,10 +42,10 @@ object LaunchingFunctions {
       val lfh = NxtFunctions.lastFeederHeight
       val ch = NxtFunctions.currentHeight
 
-      println(s"Last feeder height: $lfh, local height: $ch, isOffline: ${Constants.isOffline}")
+      Logger.logDebugMessage(s"Last feeder height: $lfh, local height: $ch, isOffline: ${Constants.isOffline}")
 
       if ( !(Constants.isOffline || ((lfh!=0) && (lfh - ch) < 2))){
-        println("Still downloading blockchain...")
+        Logger.logInfoMessage("Still downloading blockchain...")
         Thread.sleep(5000)
         downloadStep()
       }

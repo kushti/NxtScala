@@ -1,12 +1,11 @@
 package nxt.utils
 
 import nxt._
+import nxt.util.Logger
 import scala.annotation.tailrec
 import scala.concurrent.{Await, Promise, Future}
 import scala.concurrent.duration._
 import scala.collection.concurrent.TrieMap
-import scala.util.Random
-
 
 object WaitingUtils {
   import NxtFunctions._
@@ -28,7 +27,7 @@ object WaitingUtils {
     }
 
     def notify(b: Block) {
-      println(s"Block ${b.getHeight}, transactions inside: " + b.getTransactions.size)
+      Logger.logDebugMessage(s"Block ${b.getHeight}, transactions inside: " + b.getTransactions.size)
       tasks.remove(b.getHeight).getOrElse(Seq()).foreach(_.complete)
     }
   }
@@ -49,7 +48,7 @@ object WaitingUtils {
   }
 
   def afterNextBlocks[T](howMany: Int)(fn:  => T): Future[T] = {
-    println(s"Going to wait for $howMany blocks, current height is " + currentHeight)
+    Logger.logDebugMessage(s"Going to wait for $howMany blocks, current height is " + currentHeight)
     listener.submit(howMany, fn)
   }
 
