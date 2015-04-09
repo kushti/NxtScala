@@ -1,25 +1,25 @@
 package nxt
 
-import scala.collection.JavaConversions._
 import nxt.util.Convert
+import scala.collection.JavaConversions._
 
 
-case class Share(accountId: Long, shares:Long, percentage:Double){
+case class Share(accountId: Long, shares: Long, percentage: Double) {
   override def toString = s"Share(id: ${Convert.rsAccount(accountId)}, shares: $shares, %%: $percentage)"
 }
 
-case class AssetOwners(assetId:Long, height: Int, totalAssets:Long, issuerShare:Share, otherShares:Seq[Share]){
+case class AssetOwners(assetId: Long, height: Int, totalAssets: Long, issuerShare: Share, otherShares: Seq[Share]) {
 
   override def toString = {
-    s"Asset: ${Convert.toUnsignedLong(assetId)}, total assets: $totalAssets, " +
-    s"height: $height, issuer assets: $issuerShare, other owners:"+otherShares.mkString("(",",",")")
+    s"Asset: ${java.lang.Long.toUnsignedString(assetId)}, total assets: $totalAssets, " +
+      s"height: $height, issuer assets: $issuerShare, other owners:" + otherShares.mkString("(", ",", ")")
   }
 }
 
 object AssetFunctions {
 
   //todo: totally ineffective method, should be fixed after 1.3.0
-  def assetOwners(assetId:Long):AssetOwners = {
+  def assetOwners(assetId: Long): AssetOwners = {
     val height = NxtFunctions.currentHeight
     val asset = Asset.getAsset(assetId)
     val issuer = asset.getAccountId
@@ -28,12 +28,12 @@ object AssetFunctions {
     val totalDouble = total.toDouble
 
     val issuerBalance = Account.getAccount(issuer).getAssetBalanceQNT(assetId)
-    val issuerShare = Share(issuer, issuerBalance, issuerBalance/totalDouble)
+    val issuerShare = Share(issuer, issuerBalance, issuerBalance / totalDouble)
 
-    val otherShares = Account.getAllAccounts(0, Int.MaxValue).iterator().flatMap{acc=>
+    val otherShares = Account.getAllAccounts(0, Int.MaxValue).iterator().flatMap { acc =>
       val balance = acc.getAssetBalanceQNT(assetId)
-      if(balance>0 && acc.getId!=issuer){
-        Some(Share(acc.getId.toLong, balance, balance/totalDouble))
+      if (balance > 0 && acc.getId != issuer) {
+        Some(Share(acc.getId.toLong, balance, balance / totalDouble))
       } else None
     }.toSeq
 

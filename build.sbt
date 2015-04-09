@@ -2,7 +2,7 @@ organization := "nxt"
 
 name := "nxtscala"
 
-version := "0.1.55"
+version := "0.2"
 
 scalaVersion := "2.11.5"
 
@@ -25,5 +25,3 @@ libraryDependencies ++= Seq(
 publishMavenStyle := true
 
 publishTo := Some(Resolver.file("nxtscala", new File( "../repo" )))
-
-

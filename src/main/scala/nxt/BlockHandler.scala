@@ -33,7 +33,7 @@ case class BlockHandler(block: Block) {
     case false => BinaryMessage(bytes)
   }
 
-  def decryptMessages(phrase: String): Seq[Message] = {
+  def decryptMessages(phrase: String): Seq[AbstractMessage] = {
     val accId = accountId(phrase)
     Option(Account.getAccount(accId)).map {
       acc =>
