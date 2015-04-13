@@ -33,17 +33,20 @@ case class BlockHandler(block: Block) {
     case false => BinaryMessage(bytes)
   }
 
-  def decryptMessages(phrase: String): Seq[AbstractMessage] = {
+  def decryptMessages(phrase: String): Seq[AbstractMessage] =
+    decryptMessages(phrase, uncompress = false)
+
+  def decryptMessages(phrase: String, uncompress:Boolean): Seq[AbstractMessage] = {
     val accId = accountId(phrase)
     Option(Account.getAccount(accId)).map {
       acc =>
         transactions.flatMap {
           tx => if (tx.getRecipientId.toLong == accId)
             Option(tx.getEncryptedMessage)
-              .map(msg => toMessage(msg.isText, acc.decryptFrom(msg.getEncryptedData, phrase)))
+              .map(msg => toMessage(msg.isText, acc.decryptFrom(msg.getEncryptedData, phrase, uncompress)))
           else if (tx.getSenderId.toLong == accId)
             Option(tx.getEncryptToSelfMessage)
-              .map(msg => toMessage(msg.isText, acc.decryptFrom(msg.getEncryptedData, phrase)))
+              .map(msg => toMessage(msg.isText, acc.decryptFrom(msg.getEncryptedData, phrase, uncompress)))
           else None
         }
     }.getOrElse(Seq())

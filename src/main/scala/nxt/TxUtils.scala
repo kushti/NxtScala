@@ -1,6 +1,6 @@
 package nxt.utils
 
-import nxt.Appendix.{Message, PublicKeyAnnouncement}
+import nxt.Appendix.{PrunablePlainMessage, Message, PublicKeyAnnouncement}
 import nxt._
 import nxt.crypto.Crypto
 import org.joda.time.DateTime
@@ -41,7 +41,7 @@ object TransactionTemplates {
   def sendMoney(phrase: String, amount: Long, recipient: Long, recipientPubKey: Array[Byte]) = Try {
     val tx = generateTxBuilder(phrase, Attachment.ORDINARY_PAYMENT, amount)
       .recipientId(recipient)
-      .publicKeyAnnouncement(new PublicKeyAnnouncement(recipientPubKey))
+      .appendix(new PublicKeyAnnouncement(recipientPubKey))
       .build(phrase)
     broadcastAndReturn(tx)
   }
@@ -49,7 +49,7 @@ object TransactionTemplates {
   def sendPublicMessage(phrase: String, text: String, recipient: Long = 0) = Try {
     val tx = generateTxBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
       .recipientId(recipient)
-      .message(new Message(text))
+      .appendix(new PrunablePlainMessage(text))
       .build(phrase)
     broadcastAndReturn(tx)
   }
