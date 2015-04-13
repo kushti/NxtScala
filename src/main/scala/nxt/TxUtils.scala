@@ -46,8 +46,9 @@ object TransactionTemplates {
     broadcastAndReturn(tx)
   }
 
-  def sendPublicMessage(phrase: String, text: String, recipient: Long = 0) = Try {
-    val tx = generateTxBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
+  def sendPrunablePublicMessage(phrase: String, text: String, recipient: Long = 0) = Try {
+    val fee = Constants.ONE_NXT + (Constants.ONE_NXT*0.1*(text.length/1000+1)).toLong
+    val tx = generateTxBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0, fee)
       .recipientId(recipient)
       .appendix(new PrunablePlainMessage(text))
       .build(phrase)
