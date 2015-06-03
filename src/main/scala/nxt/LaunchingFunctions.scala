@@ -30,7 +30,7 @@ object LaunchingFunctions {
       case None =>
           val propsRes = getClass.getClassLoader.getResource ("nxt-default.properties")
           System.setProperty ("nxt-default.properties", propsRes.getFile)
-          Option (getClass.getClassLoader.getResourceAsStream ("nxt.properties") ).map (props.load)
+          Option (getClass.getClassLoader.getResourceAsStream ("nxt.properties") ).foreach (props.load)
     }
 
       Nxt.init(props)
