@@ -1,6 +1,6 @@
 package nxt.utils
 
-import nxt.Appendix.{PrunablePlainMessage, PublicKeyAnnouncement}
+import nxt.Appendix.{Message, PrunablePlainMessage, PublicKeyAnnouncement}
 import nxt._
 import nxt.crypto.Crypto
 import org.joda.time.DateTime
@@ -63,7 +63,7 @@ object TransactionTemplates {
     val fee = Constants.ONE_NXT
     val builder0 = generateTxBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0, fee)
       .recipientId(recipient)
-      .appendix(new PrunablePlainMessage(text))
+      .appendix(new Message(text))
 
     val builder = refFullHashOpt.map(fh=> builder0.referencedTransactionFullHash(fh)).getOrElse(builder0)
 
