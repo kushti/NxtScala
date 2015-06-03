@@ -1,10 +1,10 @@
 package nxt.utils
 
-import nxt.Appendix.{PrunablePlainMessage, Message, PublicKeyAnnouncement}
+import nxt.Appendix.{PrunablePlainMessage, PublicKeyAnnouncement}
 import nxt._
 import nxt.crypto.Crypto
 import org.joda.time.DateTime
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 
 object TransactionTemplates {
@@ -46,7 +46,7 @@ object TransactionTemplates {
     broadcastAndReturn(tx)
   }
 
-  def sendPrunablePublicMessage(phrase: String, text: String, recipient: Long = 0) = Try {
+  def sendPrunableMessage(phrase: String, text: String, recipient: Long):Try[Transaction] = Try {
     val fee = Constants.ONE_NXT + (Constants.ONE_NXT*0.1*(text.length/1000+1)).toLong
     val tx = generateTxBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0, fee)
       .recipientId(recipient)
@@ -55,26 +55,42 @@ object TransactionTemplates {
     broadcastAndReturn(tx)
   }
 
+  def sendPrunablePublicMessage(phrase: String, text: String):Try[Transaction] =
+    sendPrunableMessage(phrase, text, 0)
 
-  /*
-  def sendPublicMultipartMessage(phrase: String, text: String): Try[Transaction] = {
+  def sendNonPrunableMessage(phrase: String, text: String,
+                             recipient: Long, refFullHashOpt: Option[String] = None):Try[Transaction] = Try {
+    val fee = Constants.ONE_NXT
+    val builder0 = generateTxBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0, fee)
+      .recipientId(recipient)
+      .appendix(new PrunablePlainMessage(text))
+
+    val builder = refFullHashOpt.map(fh=> builder0.referencedTransactionFullHash(fh)).getOrElse(builder0)
+
+    broadcastAndReturn(builder.build(phrase))
+  }
+
+  def sendNonPrunablePublicMessage(phrase: String,
+                             text: String,
+                             refFullHashOpt: Option[String] = None):Try[Transaction] =
+    sendNonPrunableMessage(phrase, text, 0, refFullHashOpt)
+
+  
+  def sendNonPrunableMultipartMessage(phrase: String, text: String): Try[Transaction] = {
     val partSize = Constants.MAX_ARBITRARY_MESSAGE_LENGTH - 10
     if (text.getBytes.size > partSize * 10) Failure(new IllegalArgumentException("Too long text"))
     val parts = text.grouped(partSize).toList
-    val headTxTry = sendPublicMessage(phrase, parts.head)
+    val headTxTry = sendNonPrunablePublicMessage(phrase, parts.head)
 
     headTxTry.flatMap { headTx =>
       parts.tail.foldLeft[Try[Transaction]](headTxTry) { case (tr, part) =>
         tr.map { prevTx =>
           val fh = prevTx.getFullHash
-          new PhraseTransactionBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0)
-            .withPublicMessage(part)
-            .withReferencedTransaction(fh)
-            .broadcastSigned()
+          sendNonPrunablePublicMessage(phrase, part, Some(fh))
         }.flatten
       }.map { _ => headTx }
     }
-  } */
+  } 
 
   def publicKeyAnnouncement(phrase: String, senderPhrase: String) = {
     val pk = Crypto.getPublicKey(phrase)
