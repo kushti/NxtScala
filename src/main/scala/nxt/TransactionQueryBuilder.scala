@@ -9,30 +9,30 @@ class TransactionQueryBuilder {
 
   protected val sql = "SELECT * FROM transaction WHERE amount >= 0 "
 
-  private def withPrefix(prefix:String) = {
+  private def withSuffix(suffix:String) = {
     val s = this.sql
     new TransactionQueryBuilder{
-      override protected val sql = s"$s $prefix "
+      override protected val sql = s"$s $suffix "
     }
   }
 
-  def withSender(accountId:Long) = withPrefix(s"AND sender_id = $accountId")
+  def withSender(accountId:Long) = withSuffix(s"AND sender_id = $accountId")
 
-  def withRecipient(accountId:Long) = withPrefix(s"AND recipient_id = $accountId")
+  def withRecipient(accountId:Long) = withSuffix(s"AND recipient_id = $accountId")
 
-  def withId(id:Long) = withPrefix(s"AND id = $id")
+  def withId(id:Long) = withSuffix(s"AND id = $id")
 
-  def withHeightMoreThan(height:Int) = withPrefix(s"AND height > $height")
+  def withHeightMoreThan(height:Int) = withSuffix(s"AND height > $height")
 
-  def withHeightLessThan(height:Int) = withPrefix(s"AND height < $height")
+  def withHeightLessThan(height:Int) = withSuffix(s"AND height < $height")
 
-  def withPlainMessage() = withPrefix("AND has_message = true")
+  def withPlainMessage() = withSuffix("AND has_message = true")
 
-  def withType(txType:Byte) = withPrefix(s"AND type = $txType")
+  def withType(txType:Byte) = withSuffix(s"AND type = $txType")
 
-  def withType(txType:Byte, subType:Byte) = withPrefix(s"AND type = $txType AND subtype = $subType")
+  def withType(txType:Byte, subType:Byte) = withSuffix(s"AND type = $txType AND subtype = $subType")
 
-  def withReferenceToTransaction(tx:Transaction) = withPrefix(s"AND referenced_transaction_full_hash = '${tx.getFullHash}'")
+  def withReferenceToTransaction(tx:Transaction) = withSuffix(s"AND referenced_transaction_full_hash = '${tx.getFullHash}'")
 
   def query():Try[Seq[Transaction]] = {
     Logger.logDebugMessage(s"Going to execute query: $sql")
