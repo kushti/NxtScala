@@ -2,6 +2,7 @@ package nxt
 
 import nxt.crypto.Crypto
 import nxt.Appendix.PublicKeyAnnouncement
+import scala.collection.JavaConversions._
 
 object NxtFunctions {
 
@@ -53,6 +54,8 @@ object NxtFunctions {
   def unconfirmedMsTokenBalance(accountId:Long, currencyId:Long):Long =
     Option(Account.getAccount(accountId)).map(_.getUnconfirmedCurrencyUnits(currencyId)).getOrElse(0:Long)
 
+  def aliases(accountId:Long) = Alias.getAliasesByOwner(accountId,0,-1).iterator().toSeq
+
   //as class constructor has package-wide visibility
   def announcement(pubKey:Array[Byte]) = new PublicKeyAnnouncement(pubKey)
 
@@ -72,7 +75,6 @@ object NxtFunctions {
    */
   def getEpochTime: Int =
     ((System.currentTimeMillis - Constants.EPOCH_BEGINNING + 500) / 1000).toInt
-
 
   /**
     * Pop off blocks and then remove unconfirmed transactions if needed
