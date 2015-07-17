@@ -108,7 +108,7 @@ object TransactionTemplates {
 
   def registerAlias(phrase: String, alias: String): Try[Transaction] = Try {
     val att = new Attachment.MessagingAliasAssignment(alias, "")
-    val tx = generateTxBuilder(phrase, att, 0).build()
+    val tx = generateTxBuilder(phrase, att, 0).build(phrase)
     broadcastAndReturn(tx)
   }
 
