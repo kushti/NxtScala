@@ -1,6 +1,7 @@
 package nxt.utils
 
 import nxt.Appendix.{Message, PrunablePlainMessage, PublicKeyAnnouncement}
+import nxt.Attachment.MessagingAliasAssignment
 import nxt._
 import nxt.crypto.Crypto
 import org.joda.time.DateTime
@@ -103,6 +104,12 @@ object TransactionTemplates {
     if (Option(NxtFunctions.addOrGetAccount(phrase).getPublicKey).isEmpty) {
       Some(publicKeyAnnouncement(phrase, senderPhrase))
     } else None
+  }
+
+  def registerAlias(phrase: String, alias: String): Try[Transaction] = Try {
+    val att = new Attachment.MessagingAliasAssignment(alias, "")
+    val tx = generateTxBuilder(phrase, att, 0).build()
+    broadcastAndReturn(tx)
   }
 
   def sellAlias(phrase: String, alias: String, priceNqt: Long, buyerIdOpt: Option[Long]): Try[Transaction] = Try {

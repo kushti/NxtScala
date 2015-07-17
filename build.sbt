@@ -2,9 +2,9 @@ organization := "nxt"
 
 name := "nxtscala"
 
-version := "0.2.5"
+version := "0.2.6"
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.7"
 
 scalacOptions in Test ++= Seq("-Yrangepos")
 
