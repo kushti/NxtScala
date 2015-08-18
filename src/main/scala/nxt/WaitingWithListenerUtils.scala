@@ -8,7 +8,7 @@ import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
 
-object WaitingUtils {
+object WaitingWithListenerUtils {
 
   import NxtFunctions._
 

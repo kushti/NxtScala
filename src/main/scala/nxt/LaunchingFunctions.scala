@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 import scala.concurrent.duration._
 import nxt.NxtFunctions._
 import nxt.utils.TransactionTemplates._
-import nxt.utils.WaitingUtils._
+import nxt.utils.WaitingWithListenerUtils._
 
 
 object LaunchingFunctions {
