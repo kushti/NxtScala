@@ -7,7 +7,6 @@ import scala.annotation.tailrec
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
-import scala.util.Try
 
 object WaitingUtils {
 
@@ -34,15 +33,6 @@ object WaitingUtils {
       tasks.remove(b.getHeight).getOrElse(Seq()).foreach(_.complete)
     }
   }
-
-  def generateBlock(forgerSecretPhrase: String) = Try {
-    BlockchainProcessorImpl.getInstance.generateBlock(forgerSecretPhrase, Nxt.getEpochTime)
-  }.recover { case e: BlockchainProcessor.BlockNotAcceptedException =>
-    e.printStackTrace
-  }
-
-  def generateBlocks(forgerSecretPhrase: String,
-                     howMany: Int) = (1 to howMany).foreach { _ => generateBlock(forgerSecretPhrase) }
 
   def untilSome[T](max: Int)(fn: => Option[T]): Option[T] = {
     @tailrec

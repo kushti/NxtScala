@@ -3,6 +3,7 @@ package nxt
 import nxt.crypto.Crypto
 import nxt.Appendix.PublicKeyAnnouncement
 import scala.collection.JavaConversions._
+import scala.util.Try
 
 object NxtFunctions {
 
@@ -84,4 +85,13 @@ object NxtFunctions {
     BlockchainProcessorImpl.getInstance().popOffTo(NxtFunctions.currentHeight - howMany)
     if(removeUnconfirmedTransactions) TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions()
   }
+
+  def generateBlock(forgerSecretPhrase: String) = Try {
+    BlockchainProcessorImpl.getInstance.generateBlock(forgerSecretPhrase, Nxt.getEpochTime)
+  }.recover { case e: BlockchainProcessor.BlockNotAcceptedException =>
+    e.printStackTrace
+  }
+
+  def generateBlocks(forgerSecretPhrase: String,
+                     howMany: Int) = (1 to howMany).foreach { _ => generateBlock(forgerSecretPhrase) }
 }
