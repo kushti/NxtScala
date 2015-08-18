@@ -69,8 +69,8 @@ object NxtFunctions {
   def accountIds(phrases:Seq[String]):Seq[Long] = phrases map accountId
 
   /**
-   * Return current time in Nxt Epoch Format(number of seconds from genesis block). It was a part of
-   * nxt.util.Convert before 1.3.0
+   * Return current time in Nxt Epoch Format(number of seconds from genesis block).
+   * It was a part of nxt.util.Convert before 1.3.0
    * @return number of seconds since genesis
    */
   def getEpochTime: Int =
@@ -78,7 +78,7 @@ object NxtFunctions {
 
   /**
     * Pop off blocks and then remove unconfirmed transactions if needed
-    * @param howMany
+    * @param howMany - how many blocks to pop off
     */
   def forgetLastBlocks(howMany:Int, removeUnconfirmedTransactions:Boolean):Unit = {
     BlockchainProcessorImpl.getInstance().popOffTo(NxtFunctions.currentHeight - howMany)
