@@ -4,6 +4,7 @@ import nxt.crypto.Crypto
 import nxt.Appendix.PublicKeyAnnouncement
 import scala.collection.JavaConversions._
 import scala.util.Try
+import scala.concurrent.duration._
 
 object NxtFunctions {
 
@@ -93,5 +94,8 @@ object NxtFunctions {
   }
 
   def generateBlocks(forgerSecretPhrase: String,
-                     howMany: Int) = (1 to howMany).foreach { _ => generateBlock(forgerSecretPhrase) }
+                     howMany: Int) = (1 to howMany).foreach { _ =>
+    generateBlock(forgerSecretPhrase)
+    Thread.sleep(1.second.toMillis) //to avoid equal timestamps causing error on block validation
+  }
 }
