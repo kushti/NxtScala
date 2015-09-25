@@ -11,6 +11,9 @@ import scala.util.{Failure, Try}
 object TransactionTemplates {
   val DefaultDeadline: Short = 1440
   val DefaultFee = Constants.ONE_NXT
+  val MaxReferencedChainSize = 10
+
+  private val EmptyURI = ""
 
   def generateTxBuilder(phrase: String, attachment: Attachment,
                         amount: Long, fee: Long = DefaultFee): Transaction.Builder = {
@@ -79,7 +82,9 @@ object TransactionTemplates {
 
   def sendNonPrunableMultipartMessage(phrase: String, text: String): Try[Transaction] = {
     val partSize = Constants.MAX_ARBITRARY_MESSAGE_LENGTH - 10
-    if (text.getBytes.size > partSize * 10) Failure(new IllegalArgumentException("Too long text"))
+    if (text.getBytes.size > partSize * MaxReferencedChainSize)
+      Failure(new IllegalArgumentException("Too long text"))
+
     val parts = text.grouped(partSize).toList
     val headTxTry = sendNonPrunablePublicMessage(phrase, parts.head)
 
@@ -107,7 +112,7 @@ object TransactionTemplates {
   }
 
   def registerAlias(phrase: String, alias: String): Try[Transaction] = Try {
-    val att = new Attachment.MessagingAliasAssignment(alias, "")
+    val att = new Attachment.MessagingAliasAssignment(alias, EmptyURI)
     val tx = generateTxBuilder(phrase, att, 0).build(phrase)
     broadcastAndReturn(tx)
   }
