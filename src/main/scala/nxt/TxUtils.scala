@@ -1,10 +1,10 @@
 package nxt.utils
 
 import nxt.Appendix.{Message, PrunablePlainMessage, PublicKeyAnnouncement}
-import nxt.Attachment.MessagingAliasAssignment
 import nxt._
 import nxt.crypto.Crypto
 import org.joda.time.DateTime
+
 import scala.util.{Failure, Try}
 
 
@@ -47,8 +47,8 @@ object TransactionTemplates {
     broadcastAndReturn(tx)
   }
 
-  def sendPrunableMessage(phrase: String, text: String, recipient: Long):Try[Transaction] = Try {
-    val fee = Constants.ONE_NXT + (Constants.ONE_NXT*0.1*(text.length/1000+1)).toLong
+  def sendPrunableMessage(phrase: String, text: String, recipient: Long): Try[Transaction] = Try {
+    val fee = Constants.ONE_NXT + (Constants.ONE_NXT * 0.1 * (text.length / 1000 + 1)).toLong
     val tx = generateTxBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0, fee)
       .recipientId(recipient)
       .appendix(new PrunablePlainMessage(text))
@@ -56,27 +56,27 @@ object TransactionTemplates {
     broadcastAndReturn(tx)
   }
 
-  def sendPrunablePublicMessage(phrase: String, text: String):Try[Transaction] =
+  def sendPrunablePublicMessage(phrase: String, text: String): Try[Transaction] =
     sendPrunableMessage(phrase, text, 0)
 
   def sendNonPrunableMessage(phrase: String, text: String,
-                             recipient: Long, refFullHashOpt: Option[String] = None):Try[Transaction] = Try {
+                             recipient: Long, refFullHashOpt: Option[String] = None): Try[Transaction] = Try {
     val fee = Constants.ONE_NXT
     val builder0 = generateTxBuilder(phrase, Attachment.ARBITRARY_MESSAGE, 0, fee)
       .recipientId(recipient)
       .appendix(new Message(text))
 
-    val builder = refFullHashOpt.map(fh=> builder0.referencedTransactionFullHash(fh)).getOrElse(builder0)
+    val builder = refFullHashOpt.map(fh => builder0.referencedTransactionFullHash(fh)).getOrElse(builder0)
 
     broadcastAndReturn(builder.build(phrase))
   }
 
   def sendNonPrunablePublicMessage(phrase: String,
-                             text: String,
-                             refFullHashOpt: Option[String] = None):Try[Transaction] =
+                                   text: String,
+                                   refFullHashOpt: Option[String] = None): Try[Transaction] =
     sendNonPrunableMessage(phrase, text, 0, refFullHashOpt)
 
-  
+
   def sendNonPrunableMultipartMessage(phrase: String, text: String): Try[Transaction] = {
     val partSize = Constants.MAX_ARBITRARY_MESSAGE_LENGTH - 10
     if (text.getBytes.size > partSize * 10) Failure(new IllegalArgumentException("Too long text"))
@@ -91,7 +91,7 @@ object TransactionTemplates {
         }.flatten
       }.map { _ => headTx }
     }
-  } 
+  }
 
   def publicKeyAnnouncement(phrase: String, senderPhrase: String) = {
     val pk = Crypto.getPublicKey(phrase)
