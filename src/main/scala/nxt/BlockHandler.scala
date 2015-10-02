@@ -4,8 +4,6 @@ import scala.collection.JavaConversions._
 import NxtFunctions._
 
 
-
-
 case class BlockHandler(block: Block) {
   def transactions = block.getTransactions
 
