@@ -1,10 +1,12 @@
 package nxt
 
 import nxt.utils.TransactionTemplates._
-import scala.util.{Failure, Success, Try}
+
 import scala.collection.JavaConversions._
+import scala.util.{Failure, Success, Try}
 
 object MessagingFunctions {
+  //todo: rename to fetchTextxWithPublisher?
   def fetchTexts(since: Int, publisherId: Long): Try[Seq[String]] = Try {
     val pms = PrunableMessage.getPrunableMessages(publisherId, 0, Integer.MAX_VALUE)
       .iterator()
@@ -23,7 +25,19 @@ object MessagingFunctions {
     oldMsgs ++ pms
   }
 
-  def fetch(txId: String): Try[String] = Try (fetchMultiPartMessage(Nxt.getBlockchain.getTransaction(txId.toLong)).get)
+  //could be heavy
+  //todo: support prunable messages
+  def fetchTextsHaving(since: Int, toLookFor: Seq[String]): Try[Seq[String]] = Try(
+    new TransactionQueryBuilder()
+      .withHeightMoreThan(since)
+      .withType(1, 0)
+      .query()
+      .get
+      .flatMap(fetchMultiPartMessage)
+      .flatMap(m => toLookFor.find(lf => m.contains(lf)))
+  )
+
+  def fetch(txId: String): Try[String] = Try(fetchMultiPartMessage(Nxt.getBlockchain.getTransaction(txId.toLong)).get)
 
   //todo: will be not needed after 1.5.x mainnet release
   private def fetchMultiPartMessage(tx: Transaction): Option[String] = {
