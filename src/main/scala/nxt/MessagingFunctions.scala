@@ -27,15 +27,22 @@ object MessagingFunctions {
 
   //could be heavy
   //todo: support prunable messages
-  def fetchTextsHaving(since: Int, toLookFor: Seq[String]): Try[Seq[String]] = Try(
-    new TransactionQueryBuilder()
+  def fetchTextsHaving(since: Int, toLookFor: Seq[String]): Try[Map[String, Seq[String]]] = Try {
+    val tuples = new TransactionQueryBuilder()
       .withHeightMoreThan(since)
       .withType(1, 0)
       .query()
       .get
       .flatMap(fetchMultiPartMessage)
-      .flatMap(m => toLookFor.find(lf => m.contains(lf)))
-  )
+      .flatMap(m => toLookFor.find(lf => m.contains(lf)).map(lf => lf -> m))
+
+    tuples.foldLeft(Map[String,Seq[String]]()) { case (mp, (lf, msg)) =>
+      mp.get(lf) match {
+        case Some(msgs) => mp.updated(lf, msgs ++ Seq(msg))
+        case None => mp.updated(lf, Seq(msg))
+      }
+    }
+  }
 
   def fetch(txId: String): Try[String] = Try(fetchMultiPartMessage(Nxt.getBlockchain.getTransaction(txId.toLong)).get)
 
