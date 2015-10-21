@@ -23,7 +23,7 @@ object MessagingFunctions {
     oldMsgs ++ pms
   }
 
-  def fetch(id: String): Try[String] = Try (fetchMultiPartMessage(Nxt.getBlockchain.getTransaction(id.toLong)).get)
+  def fetch(txId: String): Try[String] = Try (fetchMultiPartMessage(Nxt.getBlockchain.getTransaction(txId.toLong)).get)
 
   //todo: will be not needed after 1.5.x mainnet release
   private def fetchMultiPartMessage(tx: Transaction): Option[String] = {
